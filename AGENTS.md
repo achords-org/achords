@@ -4,36 +4,54 @@ This repository is **Achords-native** and optimized for coordinated multi-agent 
 
 ## Mission
 
-Build and maintain **Achords** as a lightweight, repository-native protocol for multi-agent orchestration:
-- predictable onboarding (union)
-- explicit edit intent (claims)
-- supervised alignment (CI checks)
-- transparent collaboration state (versioned files)
+Build and maintain **Achords** as a lightweight, repository-native protocol for multi-agent orchestration across three levels:
+- **Platform** — Organization setup and team onboarding
+- **Repository** — Claim-based intent and CI alignment
+- **Agent** — Identity, registration, and contribution workflow
 
 ## Non-negotiable collaboration rules
 
-1. **Union first**
+### Platform rules
+
+1. **Bootstrap before join**
+   - Organization owners must run `org-bootstrap` before any team members join.
+   - Bootstrap creates the required repository structure.
+
+2. **Join before contribute**
+   - New team members must run `org-join` to clone repositories.
+   - Local environment must be set up before any contributions.
+
+### Repository rules
+
+3. **Init before union**
+   - Each repository must run `achords-init` before agents can register.
+   - Initializes `.achords/` directory and protocol files.
+
+4. **Union first**
    - New agents must be onboarded before normal contributions.
    - Onboarding creates `.achords/agents/<agent_id>/` and updates `.achords/registry.json`.
 
-2. **Claim before code edits**
+5. **Claim before code edits**
    - Before modifying source files, an agent must register/update a claim in `.achords/claims.json`.
    - Claims must include: `id`, `agent_id`, `paths`, `purpose`, `mode`, `ttl_minutes`, `status`, `created_at`.
 
-3. **Inbox-first iteration**
+### Agent rules
+
+6. **Inbox-first iteration**
    - On each iteration, check `.achords/agents/<agent_id>/state.json`.
    - If `has_messages = 1`, process inbox before continuing.
 
-4. **Collision discipline**
+7. **Collision discipline**
    - Never proceed with overlapping active exclusive claims.
    - Resolve via coordination, path split, or claim mode change.
 
-5. **Supervisor authority**
+8. **Supervisor authority**
    - CI alignment checks are authoritative for merge safety.
    - Merge must be blocked for unresolved claim overlaps or invalid Achords state.
 
 ## Repository outcomes required in this implementation
 
+- Platform skills for organization management
 - Baseline Achords protocol files in `.achords/`
 - JSON schemas for key protocol entities
 - CI workflows for union + alignment checks
@@ -64,6 +82,13 @@ A PR is done when:
    - `.achords/events.ndjson`
    - `.achords/supervisor/state.json`
    - `.achords/schemas/*.schema.json`
+   - `.achords/skills/platform/org-bootstrap/SKILL.md`
+   - `.achords/skills/platform/org-join/SKILL.md`
+   - `.achords/skills/achords-init/SKILL.md`
+   - `.achords/skills/agent-union/SKILL.md`
+   - `.achords/skills/claim-declaration/SKILL.md`
+   - `.achords/skills/claim-collision-check/SKILL.md`
+   - `.achords/skills/alignment-verify/SKILL.md`
    - `.github/workflows/achords-union.yml`
    - `.github/workflows/achords-alignment-check.yml`
    - `docs/achords.md`

@@ -4,11 +4,47 @@
 
 Achords is a lightweight, repository-native protocol for multi-agent software collaboration. It provides:
 
+- **Platform management** for organization setup and team onboarding
 - **Union onboarding** for agent identity and lifecycle
 - **Claims** for explicit pre-edit intent over repository paths
 - **Supervisor alignment checks** in CI for collision and policy enforcement
 - **Versioned state files** for transparency and auditability
 - **Agent Skills** for discoverable, self-contained protocol operations
+
+## Three-level architecture
+
+Achords operates across three levels:
+
+### Platform level
+
+Organization-level operations for setting up and joining teams.
+
+| Skill | Purpose |
+|-------|---------|
+| `org-bootstrap` | Initialize GitHub organization structure |
+| `org-join` | Team member onboarding |
+
+### Repository level
+
+Repository-level operations for managing agent collaboration.
+
+| Skill | Purpose |
+|-------|---------|
+| `achords-init` | Bootstrap protocol in repository |
+| `agent-union` | Register agent identity |
+| `claim-declaration` | Declare work intent |
+| `claim-collision-check` | Detect overlapping claims |
+| `alignment-verify` | CI validation |
+
+### Agent level
+
+Individual agent operations within the protocol.
+
+| Operation | Purpose |
+|-----------|---------|
+| Claim lifecycle | Create, use, release claims |
+| Inbox processing | Check and respond to messages |
+| State management | Track activity and status |
 
 ## Protocol Files
 
@@ -47,30 +83,78 @@ Skills are discoverable, self-contained protocol operations. Located in `.achord
 
 ### Core Skills
 
-1. **achords-init** - Bootstrap Achords in a new repository
-2. **agent-union** - Register a new agent before first contribution
-3. **claim-declaration** - Declare work intent (claim) before editing code
-4. **claim-collision-check** - Detect overlapping exclusive claims
-5. **alignment-verify** - CI validation of protocol compliance
+**Platform:**
+1. **org-bootstrap** - Initialize organization structure
+2. **org-join** - Join existing organization
+
+**Repository:**
+3. **achords-init** - Bootstrap Achords in a repository
+4. **agent-union** - Register a new agent
+5. **claim-declaration** - Declare work intent
+6. **claim-collision-check** - Detect overlapping claims
+7. **alignment-verify** - CI validation
 
 ## Collaboration Workflow
+
+### Platform initialization (one-time)
+
+```
+1. Organization owner
+   ↓ (Run org-bootstrap skill)
+2. GitHub org structure created
+   ↓ (Repos cloned locally)
+3. Base files generated
+   ↓ (Team members can now join)
+```
+
+### Team member onboarding
+
+```
+1. New team member
+   ↓ (Run org-join skill)
+2. Repos cloned to ~/Poincare/
+   ↓ (Read onboarding docs)
+3. Ready for contributions
+```
+
+### Repository setup
 
 ```
 1. New repository
    ↓ (Run achords-init skill)
 2. Initialize .achords/ structure
-   ↓ (Read agent-union skill)
-3. New agent joins
-   ↓ (Agent self-registers via agent-union)
-4. Agent in registry.json
-   ↓ (Agent reads claim-declaration skill)
-5. Agent declares claim in claims.json
-   ↓ (Edits source code)
-6. Agent commits and opens PR
-   ↓ (alignment-verify runs in CI)
-7. Supervisor checks protocol compliance
-   ↓ (If passed, merge allowed; if failed, blocked)
-8. PR merged, event logged to events.ndjson
+   ↓ (Protocol files created)
+3. Ready for agent registration
+```
+
+### Agent workflow
+
+```
+1. New agent arrives at repository
+   ↓
+2. Reads AGENTS.md (mandatory)
+   ↓
+3. Reads .achords/skills/agent-union/SKILL.md
+   ↓
+4. Runs agent-union skill
+   ↓
+5. Agent registered in .achords/registry.json
+   ↓
+6. Reads .achords/skills/claim-declaration/SKILL.md
+   ↓
+7. Plans work, declares claim in .achords/claims.json
+   ↓
+8. Makes code changes
+   ↓
+9. Commits and opens PR
+   ↓
+10. CI runs alignment-verify skill automatically
+    ✓ Alignment PASSED → merge allowed
+    ✗ Alignment FAILED → fix and retry
+   ↓
+11. PR merged, claim auto-releases
+    ↓
+12. Event logged to events.ndjson
 ```
 
 ## Claim Lifecycle
@@ -116,7 +200,7 @@ All protocol files conform to JSON schemas in `.achords/schemas/`:
 
 Achords is designed for incremental evolution:
 
-- **Phase 1 (MVP)**: Union, claims, basic alignment checks
+- **Phase 1 (Current)**: Platform setup, union, claims, basic alignment checks
 - **Phase 2**: Objective tracking, dependency graphs, policy profiles
 - **Phase 3**: Cross-repo federation, rich metrics, policy enforcement tiers
 - **Phase 4**: Agent-to-agent delegation, learned collision patterns

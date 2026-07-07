@@ -2,44 +2,94 @@
 
 This directory contains the core skills that implement the Achords protocol operations. Each skill follows the [Agent Skills specification](https://agentskills.io/specification.md).
 
-## Core Skills
+## Skill Categories
 
-### 1. [achords-init](./achords-init/SKILL.md)
+Achords skills are organized by scope:
+
+### Platform Skills (`platform/`)
+
+Organization-level operations. Use these to bootstrap or join a GitHub organization.
+
+#### 1. [org-bootstrap](./platform/org-bootstrap/SKILL.md)
+Initialize a GitHub organization for multi-agent collaboration.
+- Creates core repositories (.github, .internal, .skills)
+- Generates base files and onboarding structure
+- Clones repos locally
+- Use: First-time org setup
+
+#### 2. [org-join](./platform/org-join/SKILL.md)
+Join an existing organization as a team member.
+- Clones core repositories to local machine
+- Sets up environment for contributions
+- Use: Every new team member
+
+### Repo Skills (`./`)
+
+Repository-level operations. Use these to manage agent collaboration within a repo.
+
+#### 3. [achords-init](./achords-init/SKILL.md)
 Bootstrap the Achords protocol in a new repository.
 - Creates `.achords/` directory structure
 - Generates baseline protocol files
 - Seeds JSON schemas and skills
-- Use: First-time setup
+- Use: First-time repo setup
 
-### 2. [agent-union](./agent-union/SKILL.md)
+#### 4. [agent-union](./agent-union/SKILL.md)
 Register a new agent before making contributions.
 - Adds agent entry to registry.json
 - Creates per-agent state directory
 - Use: Every new agent joining the team
 
-### 3. [claim-declaration](./claim-declaration/SKILL.md)
+#### 5. [claim-declaration](./claim-declaration/SKILL.md)
 Declare work intent (claim) before editing files.
 - Creates claim entry with paths, TTL, mode
 - Supports exclusive and advisory modes
 - Use: Before any code changes
 
-### 4. [claim-collision-check](./claim-collision-check/SKILL.md)
+#### 6. [claim-collision-check](./claim-collision-check/SKILL.md)
 Detect overlapping exclusive claims.
 - Identifies path overlaps
 - Reports severity and recommendations
 - Use: Before opening PR or during development
 
-### 5. [alignment-verify](./alignment-verify/SKILL.md)
+#### 7. [alignment-verify](./alignment-verify/SKILL.md)
 Verify protocol compliance in CI.
 - Validates required files and JSON syntax
 - Checks claim collisions
 - Updates supervisor state
 - Use: Automatically on every PR
 
+## Workflow
+
+```
+Organization setup (one-time)
+    org-bootstrap
+         |
+         v
+Team member joins
+    org-join
+         |
+         v
+Repository setup (per-repo)
+    achords-init
+         |
+         v
+Agent onboarding (per-agent)
+    agent-union
+         |
+         v
+Agent contributes
+    claim-declaration -> work -> PR
+         |
+         v
+CI validates
+    alignment-verify
+```
+
 ## Using Skills
 
 Each skill has a `SKILL.md` file with:
-- **Frontmatter**: name, description, license, compatibility
+- **Frontmatter**: name, description, license, compatibility, metadata
 - **Instructions**: purpose, when to use, steps, output
 - **Scripts/Assets**: implementation code and templates
 
@@ -69,12 +119,8 @@ Standard structure for all skills:
 skill-name/
 ├── SKILL.md                          # Required
 ├── scripts/                          # Optional: executable code
-│   ├── init.sh                       
-│   └── register-agent.py
 ├── assets/                           # Optional: templates/resources
-│   └── baseline-files.json
 └── references/                       # Optional: docs
-    └── claim-template.md
 ```
 
 ### SKILL.md Frontmatter
@@ -88,6 +134,8 @@ compatibility: Compatibility notes
 metadata:
   author: Achords
   version: "1.0.0"
+  category: platform|repo|agent
+  skill_type: core
 ---
 ```
 
@@ -95,7 +143,9 @@ metadata:
 
 To add a new skill:
 
-1. Create directory: `.achords/skills/my-new-skill/`
+1. Create directory in appropriate category:
+   - `platform/` for org-level operations
+   - Root skills dir for repo-level operations
 2. Create `SKILL.md` with proper YAML frontmatter
 3. Add implementation:
    - `scripts/` for executable code

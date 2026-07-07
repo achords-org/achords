@@ -2,15 +2,15 @@
 
 **Achords (Agent Chords)** is a lightweight, repository-native protocol for multi-agent software collaboration.
 
-It standardizes how agents:
-- join a repository (union),
-- coordinate work intent (claims),
-- exchange state/messages,
-- and pass supervisor alignment checks before merge.
+It standardizes how organizations, repositories, and agents coordinate across three levels:
+
+- **Platform** — Organization setup and team onboarding
+- **Repository** — Claim-based intent and CI alignment
+- **Agent** — Identity, registration, and contribution workflow
 
 ---
 
-## ⚠️ Mandatory for all agents
+## Mandatory for all agents
 
 Before doing any work in this repository, **read**:
 
@@ -30,8 +30,74 @@ As multi-agent development scales, teams need explicit coordination primitives t
 - **Lightweight** (JSON + workflows)
 - **Auditable** (events and decisions are inspectable)
 - **Extensible** (schema/policy evolution)
+- **Multi-level** (organization → repository → agent)
 
-Achords provides those primitives without requiring heavy external orchestration in the MVP.
+Achords provides those primitives without requiring heavy external orchestration.
+
+---
+
+## Three-level architecture
+
+```
+Platform (Organization)
+├── org-bootstrap    Create GitHub org structure
+├── org-join         Team member onboarding
+└── ...
+    │
+    ▼
+Repository
+├── achords-init     Bootstrap protocol in repo
+├── agent-union      Register agent
+├── claim-declaration    Declare work intent
+├── claim-collision-check    Detect overlaps
+├── alignment-verify    CI validation
+└── ...
+    │
+    ▼
+Agent
+└── Contributes via claims → PR → CI → merge
+```
+
+| Level | Scope | Skills |
+|-------|-------|--------|
+| **Platform** | GitHub organization | `org-bootstrap`, `org-join` |
+| **Repository** | Individual repo | `achords-init`, `agent-union`, claims, alignment |
+| **Agent** | Specific agent | `claim-declaration`, `alignment-verify` |
+
+---
+
+## Quick start
+
+### For organization owners
+
+```bash
+# Bootstrap a new organization
+bash .achords/skills/platform/org-bootstrap/scripts/bootstrap.sh <org-name>
+```
+
+### For team members
+
+```bash
+# Join an existing organization
+bash .achords/skills/platform/org-join/scripts/setup.sh <org-name>
+```
+
+### For repository setup
+
+```bash
+# Initialize Achords in a repository
+bash .achords/skills/achords-init/scripts/init.sh
+```
+
+### For agents
+
+```bash
+# Register as an agent
+python .achords/skills/agent-union/scripts/register-agent.py
+
+# Declare work intent
+python .achords/skills/claim-declaration/scripts/declare-claim.py
+```
 
 ---
 
@@ -58,11 +124,20 @@ Achords provides those primitives without requiring heavy external orchestration
 │   │   └── .gitkeep
 │   ├── supervisor/
 │   │   └── state.json
-│   └── schemas/
-│       ├── agent-profile.schema.json
-│       ├── agent-state.schema.json
-│       ├── claim.schema.json
-│       └── message.schema.json
+│   ├── schemas/
+│   │   ├── agent-profile.schema.json
+│   │   ├── agent-state.schema.json
+│   │   ├── claim.schema.json
+│   │   └── message.schema.json
+│   └── skills/
+│       ├── platform/
+│       │   ├── org-bootstrap/
+│       │   └── org-join/
+│       ├── achords-init/
+│       ├── agent-union/
+│       ├── claim-declaration/
+│       ├── claim-collision-check/
+│       └── alignment-verify/
 └── .github/
     └── workflows/
         ├── achords-union.yml
@@ -71,71 +146,28 @@ Achords provides those primitives without requiring heavy external orchestration
 
 ---
 
-## Core protocol artifacts (`.achords/`)
+## Collaboration model
 
-- **`ACHORDS.md`**  
-  Human-readable protocol specification.
+### Platform level
 
-- **`version.json`**  
-  Protocol/repo Achords version metadata.
+1. **Org bootstrap** — Owner creates organization structure with `org-bootstrap`
+2. **Team join** — Members clone repos with `org-join`
+3. **Repository initialization** — Each repo runs `achords-init`
 
-- **`registry.json`**  
-  Canonical list of onboarded agents.
+### Repository level
 
-- **`claims.json`**  
-  Active/released/expired claims over repo paths.
+1. **Agent union** — Agent registers via `agent-union`
+2. **Claim declaration** — Agent declares intent via `claim-declaration`
+3. **Alignment check** — CI validates via `alignment-verify`
 
-- **`topology.json`**  
-  Team/supervisor collaboration topology.
+### Agent level
 
-- **`policies.json`**  
-  Policy flags (e.g. claim requirement, overlap handling).
-
-- **`events.ndjson`**  
-  Append-only event stream (bootstrap, state transitions, actions).
-
-- **`agents/<agent_id>/`**  
-  Per-agent state and messaging artifacts.
-
-- **`supervisor/state.json`**  
-  Supervisor mode and last alignment status.
-
-- **`schemas/*.schema.json`**  
-  JSON schemas for Achords entities.
-
----
-
-## Collaboration model (MVP)
-
-1. **Union onboarding**  
-   Candidate agent is registered into `.achords/registry.json` and gets a folder under `.achords/agents/<agent_id>/`.
-
-2. **Claim-before-edit**  
-   Agent declares intent in `.achords/claims.json` before modifying target files.
-
-3. **Alignment checks in CI**  
-   PR workflows validate Achords required files, JSON integrity, and claim collision rules (especially active exclusive overlaps).
-
-4. **Merge discipline**  
-   Unresolved policy or claim conflicts must be fixed before merge.
-
----
-
-## Quick start
-
-### 1) Read operational docs
-- [`AGENTS.md`](./AGENTS.md)
-- [`docs/achords.md`](./docs/achords.md)
-- [`docs/agent-union.md`](./docs/agent-union.md)
-- [`docs/claims-and-alignment.md`](./docs/claims-and-alignment.md)
-
-### 2) Verify baseline files
-Ensure `.achords/` baseline exists and JSON files are valid.
-
-### 3) Open PRs with protocol compliance
-- Use union flow for new agents.
-- Add/update claims before touching code paths.
-- Let workflows evaluate alignment.
+1. Agent reads `AGENTS.md`
+2. Agent registers via `agent-union`
+3. Agent declares claims before editing
+4. Agent opens PR
+5. CI validates compliance
+6. Merge allowed or blocked
 
 ---
 
@@ -152,33 +184,23 @@ Runs on PR updates and validates:
 
 ---
 
-## Recommended PR convention
-
-- **Branch:** `feat/achords-bootstrap` (or feature-specific)
-- **PR title style:** `feat: <short description>`
-- **PR body should include:**
-  - what changed,
-  - why it changed,
-  - policy/claim impact,
-  - validation evidence.
-
----
-
 ## Related documents
 
 - [`AGENTS.md`](./AGENTS.md) — mandatory agent rules
 - [`VALUE_PROPOSITION.md`](./VALUE_PROPOSITION.md) — strategic/product framing
 - [`docs/`](./docs) — operational documentation
 - [`.achords/ACHORDS.md`](./.achords/ACHORDS.md) — protocol spec
+- [`.achords/skills/`](./.achords/skills/README.md) — skill documentation
 
 ---
 
 ## Current status
 
-This repository is structured as an **Achords MVP bootstrap**:
-- protocol artifacts,
-- schemas,
-- CI checks,
-- and operational docs.
+This repository implements the **Achords protocol** with:
+- Platform-level skills for organization management
+- Repository-level skills for agent coordination
+- CI workflows for alignment checks
+- JSON schemas for protocol entities
+- Operational documentation
 
 Future iterations can add richer semantics (objectives, dependencies, stricter policy tiers, cross-repo federation).
