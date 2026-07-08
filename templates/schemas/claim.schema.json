@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Claim Schema",
+  "description": "Schema for entries in .achords/claims.json",
+  "type": "object",
+  "required": ["id", "agent_id", "paths", "purpose", "mode", "ttl_minutes", "status", "created_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique claim identifier",
+      "pattern": "^claim-[a-z0-9-]+$"
+    },
+    "agent_id": {
+      "type": "string",
+      "description": "Agent making the claim",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of file paths or glob patterns (e.g., 'src/**', 'tests/**')",
+      "minItems": 1
+    },
+    "purpose": {
+      "type": "string",
+      "description": "Human description of work intent",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["exclusive", "advisory"],
+      "description": "Claim mode: exclusive (blocking overlaps) or advisory (informational)"
+    },
+    "ttl_minutes": {
+      "type": "integer",
+      "description": "Time-to-live in minutes; claim auto-expires",
+      "minimum": 1,
+      "maximum": 10080
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "released", "expired"],
+      "description": "Current claim status"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Claim creation timestamp"
+    },
+    "released_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When claim was released (null if still active)"
+    }
+  }
+}

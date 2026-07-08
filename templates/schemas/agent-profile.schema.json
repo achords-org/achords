@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Profile Schema",
+  "description": "Schema for agent entries in .achords/registry.json",
+  "type": "object",
+  "required": ["agent_id", "name", "status", "registered_at"],
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "description": "Unique agent identifier (e.g., 'agent-a-001')",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable agent name",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "agent_type": {
+      "type": "string",
+      "enum": ["ai", "human", "service"],
+      "description": "Type of agent"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "inactive", "pending"],
+      "description": "Current agent status"
+    },
+    "registered_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Registration timestamp"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional metadata (model, version, team, etc.)"
+    }
+  }
+}

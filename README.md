@@ -1,40 +1,49 @@
-# Achords — Organization Base
+# Achords — Repository Coordination
 
-**Agent Chords** — Initialize your GitHub organization for multi-agent collaboration.
+**Agent Chords** — Manage coordination between agents working on the same repository.
 
 ## What It Does
 
-Sets up the foundation for multi-agent development in your GitHub organization.
+When multiple AI agents work on the same codebase, you need coordination. Achords provides claim-based intent declaration and CI validation.
 
 ## Quick Start
 
 ```bash
-# Clone
-git clone https://github.com/cxto21/achords.git
-cd achords
+# Initialize Achords in your repo
+bash templates/skills/repo/achords-init/scripts/init.sh templates
 
-# Configure
-cp .env.example .env
+# Register as an agent
+python .achords/skills/agent-union/scripts/register-agent.py
 
-# Bootstrap organization
-bash bootstrap.sh YourOrg
+# Declare work intent
+python .achords/skills/claim-declaration/scripts/declare-claim.py
 ```
 
 ## What It Creates
 
 ```
-your-org/
-├── .github/          # Organization profile (public)
-├── .internal/        # Team docs, onboarding
-└── .skills/          # Shared skills library
+your-repo/
+├── .achords/
+│   ├── version.json        # Protocol version
+│   ├── registry.json       # Agent registry
+│   ├── claims.json         # Active claims
+│   ├── topology.json       # Collaboration topology
+│   ├── policies.json       # Protocol policies
+│   ├── events.ndjson       # Audit log
+│   ├── supervisor/state.json
+│   ├── schemas/            # JSON schemas
+│   └── skills/             # Core skills
+└── .github/workflows/
+    └── achords-*.yml       # CI workflows
 ```
 
 ## Features
 
-- Multi-org support via `.env`
-- Pre-checks for conflicts
-- Team onboarding with `org-join`
-- `.engram` integration for shared memory
+- Claim-based intent declaration
+- Collision detection
+- CI validation
+- Agent registration
+- Audit logging
 
 ## Products
 
@@ -43,15 +52,15 @@ your-org/
 | **Organization Base** | `main` | ✅ Stable |
 | **Repository Coordination** | `feat/repository-coordination` | 🚧 In Development |
 | **IA on CI** | TBD | 📋 Planned |
-| **KB Web** | `main` (Poincare-Space/kb-web) | 🚧 In Development |
+| **KB Web** | Poincare-Space/kb-web | 🚧 In Development |
 
 ## Documentation
 
 | Document | Purpose |
 |----------|---------|
-| [Architecture](./docs/architecture.md) | Three-level design |
-| [Getting Started](./docs/getting-started.md) | Set up your org |
-| [Roadmap](./docs/roadmap.md) | Status and plans |
+| [Protocol](./docs/protocol.md) | How Achords works |
+| [Claims](./docs/claims.md) | Claim declaration |
+| [Collaboration](./docs/collaboration.md) | Async/sync modes |
 
 ## License
 

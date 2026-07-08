@@ -1,0 +1,76 @@
+name: Achords Union
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.achords/registry.json'
+      - '.achords/agents/**'
+      - '.achords/events.ndjson'
+
+jobs:
+  union-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Validate union PR
+        run: |
+          echo "✓ Achords Union Workflow"
+          echo "Validating agent registration..."
+          
+          # Check if .achords/registry.json exists
+          if [ ! -f .achords/registry.json ]; then
+            echo "✗ .achords/registry.json not found"
+            exit 1
+          fi
+          
+          # Validate JSON syntax
+          python3 -m json.tool .achords/registry.json > /dev/null
+          if [ $? -ne 0 ]; then
+            echo "✗ registry.json has JSON syntax errors"
+            exit 1
+          fi
+          
+          echo "✓ registry.json is valid JSON"
+          
+          # Check for agent entries
+          agent_count=$(python3 -c "import json; f=open('.achords/registry.json'); d=json.load(f); print(len(d.get('agents', [])))")
+          echo "✓ Agents registered: $agent_count"
+          
+          # Validate events.ndjson
+          if [ ! -f .achords/events.ndjson ]; then
+            echo "✗ .achords/events.ndjson not found"
+            exit 1
+          fi
+          
+          echo "✓ Agent union validation passed"
+      
+      - name: Comment PR with summary
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✓ Achords union validation passed\n\nAgents have been registered successfully. See `.achords/registry.json` for details.'
+            })
+      
+      - name: Fail PR if validation failed
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✗ Achords union validation failed\n\nPlease check:\n1. `.achords/registry.json` syntax\n2. Agent entries are valid\n3. `.achords/events.ndjson` exists'
+            })

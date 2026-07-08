@@ -1,0 +1,65 @@
+name: Achords Alignment Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main
+
+jobs:
+  alignment-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Achords Alignment Verify
+        id: alignment
+        run: |
+          python3 .achords/skills/alignment-verify/scripts/verify-alignment.py --repo .
+      
+      - name: Update supervisor state
+        if: success()
+        run: |
+          python3 - << 'EOF'
+          import json
+          from datetime import datetime, timezone
+
+          with open('.achords/supervisor/state.json') as f:
+            supervisor_state = json.load(f)
+
+          supervisor_state['last_alignment_check'] = datetime.now(timezone.utc).isoformat()
+          supervisor_state['alignment_status'] = 'passed'
+
+          with open('.achords/supervisor/state.json', 'w') as f:
+            json.dump(supervisor_state, f, indent=2)
+
+          print('✓ Supervisor state updated')
+          EOF
+      
+      - name: Comment PR result
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const status = '${{ steps.alignment.outcome }}';
+            if (status === 'success') {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: '✓ **Achords Alignment Check Passed**\n\nAll protocol validations passed:\n- Required files present\n- JSON syntax valid\n- No blocking claim overlaps\n\nMerge is allowed.'
+              });
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: '✗ **Achords Alignment Check Failed**\n\nPlease fix the issues above:\n1. Ensure all required files exist\n2. Fix JSON syntax errors\n3. Resolve claim overlaps\n\nSee logs above for details.'
+              });
+            }

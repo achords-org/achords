@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Message Schema",
+  "description": "Schema for inter-agent messages in .achords/agents/<agent_id>/inbox/",
+  "type": "object",
+  "required": ["id", "from_agent_id", "to_agent_id", "type", "timestamp"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique message identifier"
+    },
+    "from_agent_id": {
+      "type": "string",
+      "description": "Sender agent ID"
+    },
+    "to_agent_id": {
+      "type": "string",
+      "description": "Recipient agent ID"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["collision-alert", "coordination-request", "status-update", "custom"],
+      "description": "Message type"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Message subject"
+    },
+    "body": {
+      "type": "string",
+      "description": "Message content"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Message creation time"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "normal", "high"],
+      "description": "Message priority level"
+    }
+  }
+}
