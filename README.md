@@ -20,27 +20,61 @@ cd achords
 
 # Configure
 cp .env.example .env
+# Edit .env with your org name
 
-# Setup
-bash scripts/dev-setup.sh
+# Bootstrap organization
+bash bootstrap.sh YourOrg
+```
+
+## How It Works
+
+### Three Levels
+
+| Level | Scope | What Happens |
+|-------|-------|--------------|
+| **Platform** | Organization | Bootstrap org, onboard team |
+| **Repository** | Single repo | Init protocol, manage claims |
+| **Agent** | Individual | Register, declare, contribute |
+
+### Workflow
+
+```
+1. Bootstrap org (one-time)
+   bash bootstrap.sh YourOrg
+
+2. Team members join
+   bash templates/skills/platform/org-join/scripts/setup.sh YourOrg
+
+3. Init protocol in repo
+   bash templates/achords-init.sh
+
+4. Agent registers
+   python templates/skills/repo/agent-union/scripts/register-agent.py
+
+5. Agent declares claim
+   python templates/skills/repo/claim-declaration/scripts/declare-claim.py
+
+6. Agent works, opens PR
+   CI validates → merge or block
 ```
 
 ## Structure
 
 ```
 achords/
-├── docs/              # Documentation
-│   ├── protocol.md    # What Achords is
-│   ├── architecture.md # Three-level design
-│   ├── collaboration.md # Async/sync modes
-│   └── roadmap.md     # Status and plans
-├── templates/         # Files copied to projects
-│   ├── skills/        # Protocol skills
-│   ├── schemas/       # JSON schemas
-│   └── workflows/     # CI workflows
-├── protocol/          # Specification
-├── scripts/           # Setup scripts
-└── .env.example       # Configuration template
+├── bootstrap.sh              # Bootstrap organization
+├── docs/                     # Documentation
+│   ├── protocol.md           # What Achords is
+│   ├── architecture.md       # Three-level design
+│   ├── collaboration.md      # Async/sync modes
+│   └── roadmap.md            # Status and plans
+├── templates/                # Files copied to projects
+│   ├── skills/               # Protocol skills
+│   ├── schemas/              # JSON schemas
+│   └── workflows/            # CI workflows
+├── protocol/                 # Specification
+├── scripts/                  # Setup scripts
+└── .env.example              # Configuration
 ```
 
 ## Documentation
@@ -57,9 +91,13 @@ achords/
 
 See [Roadmap](./docs/roadmap.md) for current status.
 
-**Ready**: Platform setup, documentation  
-**In Progress**: Org bootstrap refinement  
-**Planned**: Repository-level skills, claims, CI
+| Area | Status |
+|------|--------|
+| Platform setup | ✅ Ready |
+| Documentation | ✅ Ready |
+| Org bootstrap | 🚧 Refining |
+| Repo-level skills | 📋 Planned |
+| Claims system | 📋 Planned |
 
 ## License
 
