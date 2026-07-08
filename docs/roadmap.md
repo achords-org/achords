@@ -84,17 +84,20 @@ your-repo/
 
 **What**: Obsidian-compatible web interface for organization documentation, repository history, and memories.
 
-**Status**: 📋 Planned  
-**Branch**: TBD
+**Status**: 🚧 In Development  
+**Branch**: v5 (based on Quartz)
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Documentation viewer | 📋 Planned | — |
-| Repository history | 📋 Planned | — |
-| Memory browser | 📋 Planned | — |
-| Visual navigation | 📋 Planned | — |
+| Quartz v5 setup | ✅ Complete | Cloned and configured |
+| Achords docs | ✅ Complete | Copied to content/ |
+| .engram sync | ✅ Complete | Script ready |
+| GitHub Pages deploy | ✅ Complete | Workflow ready |
+| Custom theme | 📋 Planned | Branding pending |
+| Repo history viewer | 📋 Planned | — |
+| Agent levels page | 📋 Planned | — |
 
-**What it will show:**
+**What it shows:**
 - Organization documentation
 - Repository commit history
 - `.engram` memories (decisions, discoveries)
@@ -124,7 +127,7 @@ feat/ia-on-ci
 └── AI review (planned)
 
 feat/kb-web
-└── Knowledge base web (planned)
+└── Knowledge base web (in development - Quartz v5)
 ```
 
 ---
