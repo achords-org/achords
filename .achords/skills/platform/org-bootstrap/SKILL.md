@@ -56,12 +56,16 @@ cat .achords/skills/platform/org-bootstrap/SKILL.md
 ### 2. Run the bootstrap script
 
 ```bash
-bash .achords/skills/platform/org-bootstrap/scripts/bootstrap.sh <org-name>
+bash .achords/skills/platform/org-bootstrap/scripts/bootstrap.sh <org-name> [skills-repo-url]
 ```
 
-Example:
+Examples:
 ```bash
+# Basic bootstrap
 bash .achords/skills/platform/org-bootstrap/scripts/bootstrap.sh Poincare-Space
+
+# With team skills from external repo
+bash .achords/skills/platform/org-bootstrap/scripts/bootstrap.sh Poincare-Space https://github.com/myorg/team-skills.git
 ```
 
 ### 3. Follow prompts
@@ -71,6 +75,7 @@ The script will:
 - Create repositories on GitHub
 - Clone them locally
 - Generate base files
+- Clone skills repo (if provided)
 
 ### 4. Verify output
 

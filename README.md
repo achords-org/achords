@@ -25,8 +25,14 @@ Adds `.engram` shared memory to this project.
 ### Organization owners
 
 ```bash
+# Basic bootstrap
 bash .achords/skills/platform/org-bootstrap/scripts/bootstrap.sh <org-name>
+
+# With team skills from external repo
+bash .achords/skills/platform/org-bootstrap/scripts/bootstrap.sh <org-name> <skills-repo-url>
 ```
+
+The skills repo URL is optional. If provided, it clones into `.skills/` automatically.
 
 ### Team members
 

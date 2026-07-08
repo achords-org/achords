@@ -3,33 +3,40 @@
 # Creates the initial repository structure for a new organization.
 #
 # Usage:
-#   bash bootstrap.sh <org-name>
+#   bash bootstrap.sh <org-name> [skills-repo-url]
 #
-# Example:
+# Examples:
 #   bash bootstrap.sh Poincare-Space
+#   bash bootstrap.sh Poincare-Space https://github.com/myorg/team-skills.git
 
 set -euo pipefail
 
 if [ $# -lt 1 ]; then
-  echo "Usage: bash bootstrap.sh <org-name>"
-  echo "Example: bash bootstrap.sh Poincare-Space"
+  echo "Usage: bash bootstrap.sh <org-name> [skills-repo-url]"
+  echo ""
+  echo "Examples:"
+  echo "  bash bootstrap.sh Poincare-Space"
+  echo "  bash bootstrap.sh Poincare-Space https://github.com/myorg/team-skills.git"
   exit 1
 fi
 
 ORG="$1"
+SKILLS_URL="${2:-}"
 REPOS=(".github" ".internal" ".skills")
 POINCARE_DIR="${HOME}/Poincare"
 
 echo "Achords — Organization Bootstrap"
 echo "================================"
 echo "Organization: ${ORG}"
+if [ -n "$SKILLS_URL" ]; then
+  echo "Skills repo:  ${SKILLS_URL}"
+fi
 echo ""
 
 # Check dependencies
 for cmd in git gh; do
   if ! command -v "$cmd" > /dev/null 2>&1; then
     echo "Missing: $cmd"
-    echo "Install it before running this script."
     exit 1
   fi
 done
@@ -88,9 +95,9 @@ echo "Generating base files..."
 # .github profile README
 PROFILE_DIR="${POINCARE_DIR}/.github/profile"
 mkdir -p "$PROFILE_DIR"
-echo "# Organization Name" > "${PROFILE_DIR}/README.md"
+echo "# ${ORG}" > "${PROFILE_DIR}/README.md"
 echo "" >> "${PROFILE_DIR}/README.md"
-echo "> Description of your organization." >> "${PROFILE_DIR}/README.md"
+echo "> Multi-agent development organization." >> "${PROFILE_DIR}/README.md"
 
 # .internal onboarding
 ONBOARDING_DIR="${POINCARE_DIR}/.internal/onboarding"
@@ -105,13 +112,40 @@ echo "# Agents.md" > "${ONBOARDING_DIR}/AGENTS.md"
 echo "" >> "${ONBOARDING_DIR}/AGENTS.md"
 echo "Agent configuration placeholder." >> "${ONBOARDING_DIR}/AGENTS.md"
 
-# .skills README
-echo "# Agent Skills" > "${POINCARE_DIR}/.skills/README.md"
-echo "" >> "${POINCARE_DIR}/.skills/README.md"
-echo "Skills library for this organization." >> "${POINCARE_DIR}/.skills/README.md"
-
 echo ""
 echo "Base files generated"
+echo ""
+
+# Clone skills repo if provided
+if [ -n "$SKILLS_URL" ]; then
+  echo "Cloning skills repository..."
+  SKILLS_DIR="${POINCARE_DIR}/.skills"
+
+  if [ -d "${SKILLS_DIR}/.git" ]; then
+    echo "  skip .skills (already has git history)"
+  else
+    # Clone to temp directory, then move contents
+    TEMP_DIR=$(mktemp -d)
+    if git clone "$SKILLS_URL" "$TEMP_DIR" --quiet 2>/dev/null; then
+      # Copy contents (including .git)
+      rm -rf "${SKILLS_DIR:?}"
+      mv "$TEMP_DIR" "$SKILLS_DIR"
+      echo "  skills cloned from ${SKILLS_URL}"
+    else
+      echo "  warn: could not clone skills repo"
+      echo "  you can add it later:"
+      echo "    cd ${SKILLS_DIR} && git init && git remote add origin ${SKILLS_URL} && git pull origin main"
+    fi
+    rm -rf "$TEMP_DIR"
+  fi
+else
+  # Create empty .skills with README
+  SKILLS_DIR="${POINCARE_DIR}/.skills"
+  echo "# Agent Skills" > "${SKILLS_DIR}/README.md"
+  echo "" >> "${SKILLS_DIR}/README.md"
+  echo "Skills library for this organization." >> "${SKILLS_DIR}/README.md"
+fi
+
 echo ""
 
 # Summary
@@ -126,4 +160,8 @@ echo ""
 echo "Next steps:"
 echo "  1. Edit ${POINCARE_DIR}/.github/profile/README.md"
 echo "  2. Edit ${POINCARE_DIR}/.internal/onboarding/AGENTS.md"
-echo "  3. Share the join-team skill with your team"
+if [ -n "$SKILLS_URL" ]; then
+  echo "  3. Skills loaded from ${SKILLS_URL}"
+else
+  echo "  3. Add skills to ${POINCARE_DIR}/.skills/"
+fi
