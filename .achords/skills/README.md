@@ -17,6 +17,10 @@ Initialize a GitHub organization for multi-agent collaboration.
 - Clones repos locally
 - Use: First-time org setup
 
+**Scripts:**
+- `bootstrap.sh` — Create org structure on GitHub
+- `dev-setup.sh` — Set up developer environment (opencode + gentle-ai + .engram)
+
 #### 2. [org-join](./platform/org-join/SKILL.md)
 Join an existing organization as a team member.
 - Clones core repositories to local machine
@@ -62,6 +66,10 @@ Verify protocol compliance in CI.
 ## Workflow
 
 ```
+Developer environment setup (one-time per machine)
+    dev-setup.sh
+         |
+         v
 Organization setup (one-time)
     org-bootstrap
          |

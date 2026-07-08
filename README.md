@@ -68,6 +68,18 @@ Agent
 
 ## Quick start
 
+### Developer environment setup
+
+```bash
+# Set up opencode + gentle-ai + .engram for a project
+bash .achords/skills/platform/org-bootstrap/scripts/dev-setup.sh <project-name>
+```
+
+This installs:
+- **opencode** — AI coding assistant
+- **gentle-ai** — SDD workflow with Engram
+- **.engram** — Shared memory submodule
+
 ### For organization owners
 
 ```bash
@@ -111,7 +123,15 @@ python .achords/skills/claim-declaration/scripts/declare-claim.py
 ├── docs/
 │   ├── achords.md
 │   ├── agent-union.md
-│   └── claims-and-alignment.md
+│   ├── claims-and-alignment.md
+│   └── file-locations.md          # Where each file lives and what it does
+├── .engram/                        # Shared memory (git submodule)
+│   ├── README.md
+│   ├── decisions/
+│   ├── discoveries/
+│   ├── patterns/
+│   ├── bugs/
+│   └── sessions/
 ├── .achords/
 │   ├── ACHORDS.md
 │   ├── version.json
@@ -132,7 +152,13 @@ python .achords/skills/claim-declaration/scripts/declare-claim.py
 │   └── skills/
 │       ├── platform/
 │       │   ├── org-bootstrap/
+│       │   │   ├── SKILL.md
+│       │   │   └── scripts/
+│       │   │       ├── bootstrap.sh
+│       │   │       └── dev-setup.sh
 │       │   └── org-join/
+│       │       ├── SKILL.md
+│       │       └── scripts/setup.sh
 │       ├── achords-init/
 │       ├── agent-union/
 │       ├── claim-declaration/
@@ -188,9 +214,11 @@ Runs on PR updates and validates:
 
 - [`AGENTS.md`](./AGENTS.md) — mandatory agent rules
 - [`VALUE_PROPOSITION.md`](./VALUE_PROPOSITION.md) — strategic/product framing
+- [`docs/file-locations.md`](./docs/file-locations.md) — where each file lives and what it does
 - [`docs/`](./docs) — operational documentation
 - [`.achords/ACHORDS.md`](./.achords/ACHORDS.md) — protocol spec
 - [`.achords/skills/`](./.achords/skills/README.md) — skill documentation
+- [`.engram/README.md`](./.engram/README.md) — shared memory usage
 
 ---
 
