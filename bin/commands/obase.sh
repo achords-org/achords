@@ -306,6 +306,33 @@ generate_files() {
   local profile_dir="${WORK_DIR}/.github/profile"
   mkdir -p "$profile_dir"
   
+  # Fetch public repos from the organization
+  local repos_json
+  repos_json=$(gh api "orgs/${ORG_NAME}/repos?type=public&per_page=100" --paginate 2>/dev/null || echo "[]")
+  
+  # Build repos table
+  local repos_table=""
+  
+  # Add achords-managed repos first
+  repos_table+="| \`.github\` | Organization profile |"
+  repos_table+=$'\n'"| \`.internal\` | Team docs and onboarding |"
+  repos_table+=$'\n'"| \`.skills\` | Shared skills library |"
+  
+  # Add existing public repos from the organization
+  if [ "$repos_json" != "[]" ] && [ -n "$repos_json" ]; then
+    local existing_repos
+    existing_repos=$(echo "$repos_json" | jq -r '.[] | select(.name != ".github" and .name != ".internal" and .name != ".skills") | "\(.name)|\(.description // "No description")"' 2>/dev/null)
+    
+    if [ -n "$existing_repos" ]; then
+      while IFS='|' read -r repo_name repo_desc; do
+        if [ -n "$repo_name" ]; then
+          repos_table+=$'\n'"| \`${repo_name}\` | ${repo_desc} |"
+        fi
+      done <<< "$existing_repos"
+    fi
+  fi
+  
+  # Write profile README
   cat > "${profile_dir}/README.md" << EOF
 # ${ORG_NAME}
 
@@ -315,8 +342,7 @@ generate_files() {
 
 | Repo | Purpose |
 |------|---------|
-| \`.internal\` | Team docs and onboarding |
-| \`.skills\` | Shared skills library |
+${repos_table}
 EOF
   ok "Profile README"
   
