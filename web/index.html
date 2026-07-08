@@ -110,7 +110,8 @@
     <section id="hero" class="relative min-h-screen flex flex-col px-[5vw] pb-24 overflow-hidden justify-center">
       <div class="absolute inset-0 z-0 pointer-events-none opacity-80">
         <img alt="Abstract waves" class="w-full h-full object-cover mix-blend-screen" style="image-rendering: high-quality;" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDhMtXoyImcYvVSnuVpbdUmCNn_ZS-A4eFBK4BJtJCQ770QN6RlonFm0CLWLmEyxyzpCjy0gGjEPmcw8hM1cL4Nf88EE8A3Y4kf-BCE-11B4SI_sg0Hg2d1i5mHV-Jlg9UWMjp11TrUVWA4LqxfRTvu2oW2ai2c3qXoAdtaMHQAaqWLCEREMtI_Moi8JErWcGHyKqn_YaNeFqAsslvZ1hCy_LHRl9fhWngyk7L8yDqqwC0kLIltA1qvw=w1920">
-        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+        <!-- Black gradient: top-left transparent → 67% black → bottom-right solid black -->
+        <div class="absolute inset-0" style="background: linear-gradient(to bottom right, transparent 0%, rgba(0,0,0,0.67) 67%, #000 100%);"></div>
         <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-purple-500/5 to-pink-500/10 mix-blend-color"></div>
       </div>
       <div class="relative z-10 max-w-[90rem] w-full">
