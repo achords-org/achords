@@ -20,9 +20,19 @@
 set -euo pipefail
 
 # ── branding ────────────────────────────────────────────────────────
-VERSION="1.0.0"
+ACHORDS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PRODUCT="obase"
 PRODUCT_NAME="Organization Base"
+
+# Read version from package.json (single source of truth)
+get_version() {
+  local pkg_json="${ACHORDS_DIR}/package.json"
+  if [ -f "$pkg_json" ]; then
+    grep '"version"' "$pkg_json" | head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/'
+  else
+    echo "unknown"
+  fi
+}
 BANNER=$(cat << 'EOF'
   ╔═══════════════════════════════════════════╗
   ║     🎵 A C H O R D S                     ║
@@ -40,6 +50,9 @@ header(){ printf "\n\033[1;35m── %s ──\033[0m\n" "$*"; }
 
 # ── help ─────────────────────────────────────────────────────────────
 show_help() {
+  local version
+  version=$(get_version)
+  
   echo "$BANNER"
   echo ""
   printf "  \033[1m%s\033[0m — %s\n" "$PRODUCT" "$PRODUCT_NAME"

@@ -12,9 +12,19 @@
 set -euo pipefail
 
 # ── config ───────────────────────────────────────────────────────────
-VERSION="1.0.0"
 ACHORDS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 REPO_URL="https://github.com/cxto21/achords.git"
+
+# Read version from package.json (single source of truth)
+get_version() {
+  local pkg_json="${ACHORDS_DIR}/package.json"
+  if [ -f "$pkg_json" ]; then
+    # Use grep + sed to extract version without jq dependency
+    grep '"version"' "$pkg_json" | head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/'
+  else
+    echo "unknown"
+  fi
+}
 
 # ── branding ─────────────────────────────────────────────────────────
 BANNER=$(cat << 'EOF'
@@ -83,9 +93,12 @@ check_updates() {
 
 # ── show version info ────────────────────────────────────────────────
 show_version() {
+  local version
+  version=$(get_version)
+  
   echo "$BANNER"
   echo ""
-  printf "  ${BOLD}Version:${NC} %s\n" "$VERSION"
+  printf "  ${BOLD}Version:${NC} %s\n" "$version"
   echo ""
   
   # Get git info if available
