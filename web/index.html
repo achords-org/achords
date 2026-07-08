@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Achords | Multi-Agent Orchestration Protocol</title>
+  <meta name="description" content="A lightweight protocol for multi-agent software collaboration. Organization Base, Repository Coordination, IA on CI, and KB Web.">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+  <script type="module" src="/src/main.js"></script>
+</head>
+<body class="bg-black text-white selection:bg-white selection:text-black">
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- Navigation -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <nav class="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-2xl border-b border-[#27272a] px-[5vw] py-6 flex justify-between items-center">
+    <div class="flex items-center gap-12">
+      <a class="logo-text" href="#">Achords</a>
+      <div class="hidden lg:flex items-center space-x-8">
+        <a class="nav-link text-white" href="#hero" data-i18n="nav.home">Inicio</a>
+        <div class="relative group">
+          <button class="nav-link text-zinc-400 group-hover:text-white flex items-center gap-1">
+            <span data-i18n="nav.products">Productos</span>
+            <span class="material-symbols-outlined text-sm">expand_more</span>
+          </button>
+          <div class="dropdown-menu p-4">
+            <div class="grid gap-4">
+              <!-- obase — available -->
+              <a class="block hover:bg-zinc-900 p-2 border-l border-transparent hover:border-white transition-all" href="https://github.com/cxto21/achords">
+                <span class="block text-sm font-bold uppercase">Organization Base</span>
+                <span class="block text-xs text-zinc-500" data-i18n="products.obase.desc">Inicializa tu organización GitHub para desarrollo multi-agente.</span>
+              </a>
+              <!-- rcord — coming soon -->
+              <div class="block p-2 border-l border-zinc-800 opacity-50">
+                <span class="block text-sm font-bold uppercase">Repository Coordination <span class="text-[10px] text-zinc-500 normal-case">— Próximamente</span></span>
+                <span class="block text-xs text-zinc-600" data-i18n="products.rcord.desc">Coordinación basada en claims para agentes en el mismo repo.</span>
+              </div>
+              <!-- iaci — coming soon -->
+              <div class="block p-2 border-l border-zinc-800 opacity-50">
+                <span class="block text-sm font-bold uppercase">IA on CI <span class="text-[10px] text-zinc-500 normal-case">— Próximamente</span></span>
+                <span class="block text-xs text-zinc-600" data-i18n="products.iaci.desc">Revisiones automáticas de código con IA en CI/CD.</span>
+              </div>
+              <!-- kbweb — coming soon -->
+              <div class="block p-2 border-l border-zinc-800 opacity-50">
+                <span class="block text-sm font-bold uppercase">KB Web <span class="text-[10px] text-zinc-500 normal-case">— Próximamente</span></span>
+                <span class="block text-xs text-zinc-600" data-i18n="products.kbweb.desc">Documentación viva compatible con Obsidian.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <a class="nav-link text-zinc-400 hover:text-white" href="https://github.com/cxto21/achords" data-i18n="nav.docs">Docs</a>
+        <a class="nav-link text-zinc-400 hover:text-white" href="https://github.com/cxto21/achords/blob/main/LICENSE" data-i18n="nav.license">Licencia</a>
+      </div>
+    </div>
+    <div class="flex items-center gap-6">
+      <div class="flex items-center border border-[#27272a] px-3 py-1 text-[10px] tracking-widest font-bold uppercase">
+        <button class="lang-btn text-white cursor-pointer" data-lang="es">ES</button>
+        <span class="mx-2 text-zinc-700">/</span>
+        <button class="lang-btn text-zinc-600 hover:text-zinc-400 transition-colors cursor-pointer" data-lang="en">EN</button>
+      </div>
+      <a href="https://github.com/cxto21/achords" class="bg-white text-black px-8 py-3 text-sm font-bold uppercase hover:bg-zinc-200 transition-all">
+        <span data-i18n="nav.getStarted">Comenzar</span>
+      </a>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- Hero Section -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <section id="hero" class="relative min-h-screen flex flex-col px-[5vw] pb-24 overflow-hidden justify-center">
+      <div class="absolute inset-0 z-0 pointer-events-none opacity-60">
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-purple-500/5 to-pink-500/10 mix-blend-color"></div>
+      </div>
+      <div class="relative z-10 max-w-[90rem] w-full">
+        <div class="mb-12">
+          <h1 class="hero-title mb-12 bg-clip-text text-transparent from-cyan-300 via-purple-300 to-pink-300 logo-text">
+            <span data-i18n="hero.title1">LA ARMONÍA</span><br><span data-i18n="hero.title2">DE LA IA.</span>
+          </h1>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+          <div class="flex flex-col">
+            <p class="large-body text-zinc-400 mb-12" data-i18n="hero.subtitle">Diseñado para equipos de desarrollo que migran a sistemas de agentes. Orquestación de precisión para transformar flujos de trabajo en sinfonías automatizadas de código.</p>
+          </div>
+          <div class="flex flex-col gap-10">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-8">
+              <a href="https://github.com/cxto21/achords" class="bg-white text-black px-8 py-3 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-zinc-200 transition-all w-fit shadow-[0_0_100px_rgba(255,255,255,0.05)]">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.041-1.412-4.041-1.412-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"></path></svg>
+                <span data-i18n="hero.starGitHub">Star on GitHub</span>
+              </a>
+              <a class="text-zinc-500 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest" href="https://github.com/cxto21/achords" data-i18n="hero.docs">Documentación →</a>
+            </div>
+            <!-- Terminal -->
+            <div class="w-full max-w-xl terminal-box">
+              <div class="bg-black/60 rounded-lg border border-[#27272a] overflow-hidden backdrop-blur-md hover:border-white transition-colors">
+                <div class="flex items-center justify-between px-4 py-2 border-b border-[#27272a]">
+                  <div class="flex gap-1.5">
+                    <div class="w-2 h-2 rounded-full bg-zinc-700"></div>
+                    <div class="w-2 h-2 rounded-full bg-zinc-700"></div>
+                    <div class="w-2 h-2 rounded-full bg-zinc-700"></div>
+                  </div>
+                  <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest" data-i18n="hero.terminal">Terminal</span>
+                </div>
+                <div class="p-6 font-mono text-base flex items-center justify-between">
+                  <span class="text-zinc-400"><span class="text-zinc-600 mr-2">$</span><span class="cmd-text" data-i18n="hero.command">npx achords obase</span></span>
+                  <span class="material-symbols-outlined text-zinc-600 text-sm cursor-pointer hover:text-white transition-colors copy-cmd">content_copy</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- Waveform -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div class="w-full h-48 flex items-end justify-center gap-[2px] px-[5vw] opacity-30 overflow-hidden bg-black" id="waveform-top"></div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- Features Grid -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <section id="features" class="px-[5vw] py-40 border-t border-[#27272a] bg-black relative">
+      <div class="flex flex-col mb-16">
+        <h2 class="text-7xl md:text-9xl font-black tracking-tighter mb-8" data-i18n="features.title">FEATURES.</h2>
+        <p class="w-full text-zinc-500 font-medium leading-relaxed text-xl max-w-4xl" data-i18n="features.subtitle">
+          Ocho características fundamentales para la orquestación técnica de tu ecosistema de agentes.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 monolith-border" id="features-grid">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- Terminal / Code Aesthetics -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <section class="px-[5vw] py-40 bg-zinc-950 relative overflow-hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+        <div>
+          <h2 class="text-6xl md:text-8xl font-black mb-12 tracking-tighter uppercase" data-i18n="terminal.title">Estética del código.</h2>
+          <div class="space-y-8">
+            <div class="flex gap-6">
+              <span class="material-symbols-outlined text-4xl mt-1">terminal</span>
+              <div>
+                <h4 class="text-2xl font-bold uppercase mb-2" data-i18n="terminal.feature1.title">Despliegue Instantáneo</h4>
+                <p class="text-xl text-zinc-400 font-light" data-i18n="terminal.feature1.desc">Integración nativa en terminal. Sin sobrecarga de configuración.</p>
+              </div>
+            </div>
+            <div class="flex gap-6">
+              <span class="material-symbols-outlined text-4xl mt-1">security</span>
+              <div>
+                <h4 class="text-2xl font-bold uppercase mb-2" data-i18n="terminal.feature2.title">Privacidad Cifrada</h4>
+                <p class="text-xl text-zinc-400 font-light" data-i18n="terminal.feature2.desc">Sincronización de conocimiento bajo protocolos de seguridad máxima.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-black border border-[#27272a] p-12 shadow-[0_0_100px_rgba(255,255,255,0.05)]">
+          <div class="flex gap-2 mb-10">
+            <div class="w-3 h-3 bg-zinc-800 rounded-full"></div>
+            <div class="w-3 h-3 bg-zinc-800 rounded-full"></div>
+            <div class="w-3 h-3 bg-zinc-800 rounded-full"></div>
+          </div>
+          <div class="font-mono text-lg lg:text-2xl space-y-6">
+            <div class="flex gap-4">
+              <span class="text-zinc-600">$</span>
+              <span class="text-white" data-i18n="terminal.command1">achords init --composition=master</span>
+            </div>
+            <div class="text-zinc-500 pl-8" data-i18n="terminal.status1">... inicializando motor armónico</div>
+            <div class="text-zinc-500 pl-8" data-i18n="terminal.status2">... escaneando repositorios [██████████] 100%</div>
+            <div class="flex gap-4 pt-4">
+              <span class="text-zinc-600">$</span>
+              <span class="text-green-500 font-bold" data-i18n="terminal.ready">achords status --ready</span>
+            </div>
+            <div class="text-white pl-8 font-bold" data-i18n="terminal.readyText">4 agentes listos para la orquestación autónoma.</div>
+            <div class="inline-block w-4 h-8 bg-white animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- Waveform -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div class="w-full h-48 flex items-end justify-center gap-[2px] px-[5vw] opacity-30 overflow-hidden bg-black" id="waveform-bottom"></div>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- Footer -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <footer class="bg-black border-t border-[#27272a] px-[5vw] py-24">
+    <div class="flex flex-col lg:flex-row justify-between items-start gap-16">
+      <div>
+        <div class="logo-text mb-8">Achords</div>
+        <p class="max-w-xs text-zinc-500 text-sm font-bold uppercase tracking-widest leading-loose" data-i18n="footer.copyright">
+          © 2026 Achords. Todos los derechos reservados.
+        </p>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-x-24 gap-y-12">
+        <div class="space-y-4">
+          <h5 class="text-xs font-black uppercase tracking-widest text-zinc-400" data-i18n="footer.product.title">Producto</h5>
+          <ul class="space-y-2">
+            <li><a class="text-sm font-bold uppercase hover:text-zinc-400 transition-colors" href="#features" data-i18n="footer.product.items.0">Funciones</a></li>
+            <li><a class="text-sm font-bold uppercase hover:text-zinc-400 transition-colors" href="https://github.com/cxto21/achords" data-i18n="footer.product.items.1">Seguridad</a></li>
+            <li><a class="text-sm font-bold uppercase hover:text-zinc-400 transition-colors" href="https://github.com/cxto21/achords/blob/main/docs/roadmap.md" data-i18n="footer.product.items.2">Roadmap</a></li>
+          </ul>
+        </div>
+        <div class="space-y-4">
+          <h5 class="text-xs font-black uppercase tracking-widest text-zinc-400" data-i18n="footer.resources.title">Recursos</h5>
+          <ul class="space-y-2">
+            <li><a class="text-sm font-bold uppercase hover:text-zinc-400 transition-colors" href="https://github.com/cxto21/achords" data-i18n="footer.resources.items.0">Documentación</a></li>
+            <li><a class="text-sm font-bold uppercase hover:text-zinc-400 transition-colors" href="https://github.com/cxto21/achords" data-i18n="footer.resources.items.1">GitHub</a></li>
+            <li><a class="text-sm font-bold uppercase hover:text-zinc-400 transition-colors" href="https://github.com/cxto21/achords/blob/main/LICENSE" data-i18n="footer.resources.items.2">Manifiesto</a></li>
+          </ul>
+        </div>
+        <div class="space-y-4">
+          <h5 class="text-xs font-black uppercase tracking-widest text-zinc-400" data-i18n="footer.community.title">Comunidad</h5>
+          <ul class="space-y-2">
+            <li><a class="text-sm font-bold uppercase hover:text-zinc-400 transition-colors" href="https://github.com/cxto21/achords/issues" data-i18n="footer.community.items.0">GitHub Issues</a></li>
+            <li><a class="text-sm font-bold uppercase hover:text-zinc-400 transition-colors" href="#" data-i18n="footer.community.items.1">Discord</a></li>
+          </ul>
+        </div>
+        <div class="space-y-4">
+          <h5 class="text-xs font-black uppercase tracking-widest text-zinc-400" data-i18n="footer.legal.title">Legal</h5>
+          <ul class="space-y-2">
+            <li><a class="text-sm font-bold uppercase hover:text-zinc-400 transition-colors" href="#" data-i18n="footer.legal.items.0">Privacidad</a></li>
+            <li><a class="text-sm font-bold uppercase hover:text-zinc-400 transition-colors" href="#" data-i18n="footer.legal.items.1">Términos</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- Waveform & Features Generator -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <script>
+    // Generate waveform bars
+    function generateWaveform(containerId, count = 150) {
+      const container = document.getElementById(containerId)
+      if (!container) return
+      for (let i = 0; i < count; i++) {
+        const bar = document.createElement('div')
+        const h = Math.floor(Math.random() * 80) + 10
+        bar.className = 'flex-1 bg-white min-w-[2px] waveform-bar'
+        bar.style.height = h + '%'
+        container.appendChild(bar)
+      }
+    }
+    generateWaveform('waveform-top')
+    generateWaveform('waveform-bottom')
+
+    // Render features grid dynamically from i18n
+    function renderFeatures() {
+      const grid = document.getElementById('features-grid')
+      if (!grid) return
+      const { t } = window._achordsI18n || {}
+      // Fallback: read from ES translations directly
+      const items = [
+        { num: "01", title: "Bases de Organización", desc: "Gestión de recursos maestros y orquestación centralizada de activos digitales." },
+        { num: "02", title: "Coordinación Git", desc: "Sincronía multi-hilo para repositorios complejos con resolución de conflictos asistida." },
+        { num: "03", title: "IA en CI", desc: "Revisiones automáticas de código y validación de lógica de negocio en tiempo real." },
+        { num: "04", title: "KB Web", desc: "Documentación viva y dinámica que evoluciona con cada commit del equipo." },
+        { num: "05", title: "Documentación para Humanos y Agentes", desc: "Diseñada para ser consumida tanto por desarrolladores como por LLMs de última generación." },
+        { num: "06", title: "Self-hosted y Nube Opcional", desc: "Opciones de despliegue flexibles con control total on-premise o escalabilidad gestionada." },
+        { num: "07", title: "Memoria Organizacional y RBAC", desc: "Base de conocimientos sincronizada con políticas robustas de Control de Acceso Basado en Roles." },
+        { num: "08", title: "Skill Hub", desc: "Un mercado centralizado para habilidades de agentes, organizado por equipos y perfiles." },
+      ]
+      grid.innerHTML = items.map(f => `
+        <div class="p-12 border-b border-[#27272a] hover:bg-zinc-900/50 transition-colors group">
+          <span class="block text-zinc-700 font-bold mb-8 text-4xl group-hover:text-white transition-colors">${f.num}</span>
+          <h3 class="text-3xl font-bold uppercase mb-6 leading-none">${f.title}</h3>
+          <p class="text-zinc-500 leading-relaxed">${f.desc}</p>
+        </div>
+      `).join('')
+    }
+    renderFeatures()
+  </script>
+
+</body>
+</html>
