@@ -397,19 +397,41 @@ EOF
 update_profile() {
   header "Updating profile README"
   
-  local profile_file="${WORK_DIR}/.github/profile/README.md"
+  local profile_dir="${WORK_DIR}/.github/profile"
+  local profile_file="${profile_dir}/README.md"
+  
+  # Create directory and file if they don't exist
+  mkdir -p "$profile_dir"
   
   if [ ! -f "$profile_file" ]; then
-    err "Profile README not found at ${profile_file}"
-    echo "  Run: achords obase --org ${ORG_NAME}"
-    exit 1
+    info "Creating profile README..."
+    cat > "$profile_file" << EOF
+# ${ORG_NAME}
+
+> Multi-agent development organization powered by [Achords](https://github.com/cxto21/achords).
+
+## Repositories
+
+<!-- achords:repos:start -->
+| Repo | Purpose |
+|------|---------|
+<!-- achords:repos:end -->
+EOF
+    ok "Profile README created"
   fi
   
-  # Check for markers
+  # Check for markers - if missing, add them
   if ! grep -q "<!-- achords:repos:start -->" "$profile_file"; then
-    err "Profile README does not have repos markers."
-    echo "  Run: achords obase --org ${ORG_NAME} to regenerate."
-    exit 1
+    info "Adding repos markers to existing README..."
+    # Find the ## Repositories line and add markers after the table header
+    awk '
+      /^## Repositories/ { print; found=1; next }
+      found && /^\| Repo/ { print; print "|------|---------|"; print "<!-- achords:repos:start -->"; skip=1; next }
+      found && skip && /^\|/ { next }
+      found && skip && !/^\|/ { print "<!-- achords:repos:end -->"; skip=0 }
+      { print }
+    ' "$profile_file" > "${profile_file}.tmp" && mv "${profile_file}.tmp" "$profile_file"
+    ok "Markers added"
   fi
   
   # Fetch public repos from the organization
