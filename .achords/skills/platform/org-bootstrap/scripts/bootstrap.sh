@@ -57,12 +57,48 @@ fi
 ok "Dependencies OK"
 echo ""
 
-# Create base directory
-mkdir -p "$POINCARE_DIR"
+# ── pre-check: verify local state before doing anything ──────────────
+info "Checking local state..."
 
-# ── .github ──────────────────────────────────────────────────────────
-info "Setting up .github..."
+CONFLICTS=0
 
+# Check .internal
+INTERNAL_DIR="${POINCARE_DIR}/.internal"
+if [ -d "$INTERNAL_DIR" ]; then
+  CONTENT_COUNT=$(find "$INTERNAL_DIR" -mindepth 1 -not -path '*/\.git/*' -not -path '*/\.git' 2>/dev/null | wc -l)
+  if [ "$CONTENT_COUNT" -gt 0 ]; then
+    err ".internal exists with content — will NOT overwrite"
+    echo "  Location: ${INTERNAL_DIR}"
+    echo "  To reset:  rm -rf ${INTERNAL_DIR}"
+    CONFLICTS=$((CONFLICTS + 1))
+  fi
+fi
+
+# Check .skills
+SKILLS_DIR="${POINCARE_DIR}/.skills"
+if [ -d "$SKILLS_DIR" ]; then
+  CONTENT_COUNT=$(find "$SKILLS_DIR" -mindepth 1 -not -path '*/\.git/*' -not -path '*/\.git' 2>/dev/null | wc -l)
+  if [ "$CONTENT_COUNT" -gt 0 ]; then
+    err ".skills exists with content — will NOT overwrite"
+    echo "  Location: ${SKILLS_DIR}"
+    echo "  To reset:  rm -rf ${SKILLS_DIR}"
+    CONFLICTS=$((CONFLICTS + 1))
+  fi
+fi
+
+if [ "$CONFLICTS" -gt 0 ]; then
+  echo ""
+  err "Found ${CONFLICTS} conflict(s). Fix the issues above and retry."
+  exit 1
+fi
+
+ok "Local state OK"
+echo ""
+
+# ── create repos ─────────────────────────────────────────────────────
+info "Creating repositories..."
+
+# .github
 if gh repo view "${ORG}/.github" > /dev/null 2>&1; then
   ok ".github exists on GitHub"
 else
@@ -71,27 +107,7 @@ else
   ok ".github created"
 fi
 
-GITHUB_DIR="${POINCARE_DIR}/.github"
-if [ -d "$GITHUB_DIR" ]; then
-  ok ".github exists locally"
-else
-  info "Cloning .github..."
-  git clone "https://github.com/${ORG}/.github.git" "$GITHUB_DIR" --quiet
-  ok ".github cloned"
-fi
-
-# Generate profile README
-PROFILE_DIR="${GITHUB_DIR}/profile"
-mkdir -p "$PROFILE_DIR"
-echo "# ${ORG}" > "${PROFILE_DIR}/README.md"
-echo "" >> "${PROFILE_DIR}/README.md"
-echo "> Multi-agent development organization." >> "${PROFILE_DIR}/README.md"
-ok "Profile README generated"
-echo ""
-
-# ── .internal ────────────────────────────────────────────────────────
-info "Setting up .internal..."
-
+# .internal
 if gh repo view "${ORG}/.internal" > /dev/null 2>&1; then
   ok ".internal exists on GitHub"
 else
@@ -100,41 +116,7 @@ else
   ok ".internal created"
 fi
 
-INTERNAL_DIR="${POINCARE_DIR}/.internal"
-if [ -d "$INTERNAL_DIR" ]; then
-  # Check if it has content (more than just .git)
-  CONTENT_COUNT=$(find "$INTERNAL_DIR" -mindepth 1 -not -path '*/\.git/*' -not -path '*/\.git' 2>/dev/null | wc -l)
-  if [ "$CONTENT_COUNT" -gt 0 ]; then
-    warn ".internal exists locally with content — skipping"
-    warn "To reset: rm -rf ${INTERNAL_DIR} && bash $0 ${ORG}"
-  else
-    ok ".internal exists locally (empty)"
-  fi
-else
-  info "Cloning .internal..."
-  git clone "https://github.com/${ORG}/.internal.git" "$INTERNAL_DIR" --quiet
-  ok ".internal cloned"
-
-  # Generate onboarding files (only if empty)
-  ONBOARDING_DIR="${INTERNAL_DIR}/onboarding"
-  mkdir -p "${ONBOARDING_DIR}/scripts"
-  mkdir -p "${ONBOARDING_DIR}/skills/join-team"
-
-  echo "# Onboarding" > "${ONBOARDING_DIR}/README.md"
-  echo "" >> "${ONBOARDING_DIR}/README.md"
-  echo "Run: bash onboarding/scripts/setup.sh" >> "${ONBOARDING_DIR}/README.md"
-
-  echo "# Agents.md" > "${ONBOARDING_DIR}/AGENTS.md"
-  echo "" >> "${ONBOARDING_DIR}/AGENTS.md"
-  echo "Agent configuration placeholder." >> "${ONBOARDING_DIR}/AGENTS.md"
-
-  ok "Onboarding files generated"
-fi
-echo ""
-
-# ── .skills ──────────────────────────────────────────────────────────
-info "Setting up .skills..."
-
+# .skills
 if gh repo view "${ORG}/.skills" > /dev/null 2>&1; then
   ok ".skills exists on GitHub"
 else
@@ -142,44 +124,64 @@ else
   gh repo create "${ORG}/.skills" --private --description "Agent skills library" --quiet
   ok ".skills created"
 fi
+echo ""
 
-SKILLS_DIR="${POINCARE_DIR}/.skills"
-if [ -d "$SKILLS_DIR" ]; then
-  # Check if it has content
-  CONTENT_COUNT=$(find "$SKILLS_DIR" -mindepth 1 -not -path '*/\.git/*' -not -path '*/\.git' 2>/dev/null | wc -l)
-  if [ "$CONTENT_COUNT" -gt 0 ]; then
-    ok ".skills exists locally with content"
-    if [ -n "$SKILLS_URL" ]; then
-      warn "Skills repo URL provided but .skills already has content"
-      warn "To import: rm -rf ${SKILLS_DIR} && bash $0 ${ORG} ${SKILLS_URL}"
-    fi
+# ── clone repos ──────────────────────────────────────────────────────
+info "Cloning repositories..."
+
+for repo in .github .internal .skills; do
+  TARGET="${POINCARE_DIR}/${repo}"
+  if [ -d "$TARGET" ]; then
+    ok "${repo} exists locally"
   else
-    ok ".skills exists locally (empty)"
+    info "Cloning ${repo}..."
+    git clone "https://github.com/${ORG}/${repo}.git" "$TARGET" --quiet
+    ok "${repo} cloned"
   fi
-else
-  info "Cloning .skills..."
-  git clone "https://github.com/${ORG}/.skills.git" "$SKILLS_DIR" --quiet
-  ok ".skills cloned"
-fi
+done
+echo ""
 
-# Clone skills repo if provided and .skills is empty
+# ── generate base files ──────────────────────────────────────────────
+info "Generating base files..."
+
+# .github profile README
+PROFILE_DIR="${POINCARE_DIR}/.github/profile"
+mkdir -p "$PROFILE_DIR"
+echo "# ${ORG}" > "${PROFILE_DIR}/README.md"
+echo "" >> "${PROFILE_DIR}/README.md"
+echo "> Multi-agent development organization." >> "${PROFILE_DIR}/README.md"
+ok "Profile README"
+
+# .internal onboarding
+ONBOARDING_DIR="${POINCARE_DIR}/.internal/onboarding"
+mkdir -p "${ONBOARDING_DIR}/scripts"
+mkdir -p "${ONBOARDING_DIR}/skills/join-team"
+
+echo "# Onboarding" > "${ONBOARDING_DIR}/README.md"
+echo "" >> "${ONBOARDING_DIR}/README.md"
+echo "Run: bash onboarding/scripts/setup.sh" >> "${ONBOARDING_DIR}/README.md"
+
+echo "# Agents.md" > "${ONBOARDING_DIR}/AGENTS.md"
+echo "" >> "${ONBOARDING_DIR}/AGENTS.md"
+echo "Agent configuration placeholder." >> "${ONBOARDING_DIR}/AGENTS.md"
+ok "Onboarding files"
+echo ""
+
+# ── import skills if provided ────────────────────────────────────────
 if [ -n "$SKILLS_URL" ]; then
-  CONTENT_COUNT=$(find "$SKILLS_DIR" -mindepth 1 -not -path '*/\.git/*' -not -path '*/\.git' 2>/dev/null | wc -l)
-  if [ "$CONTENT_COUNT" -eq 0 ]; then
-    info "Importing skills from ${SKILLS_URL}..."
-    TEMP_DIR=$(mktemp -d)
-    if git clone "$SKILLS_URL" "$TEMP_DIR" --quiet 2>/dev/null; then
-      # Move contents (including .git)
-      rm -rf "${SKILLS_DIR:?}"
-      mv "$TEMP_DIR" "$SKILLS_DIR"
-      ok "Skills imported"
-    else
-      warn "Could not clone skills repo"
-      echo "  You can add it later:"
-      echo "    cd ${SKILLS_DIR} && git remote add origin ${SKILLS_URL} && git pull origin main"
-    fi
-    rm -rf "$TEMP_DIR"
+  info "Importing skills from ${SKILLS_URL}..."
+  TEMP_DIR=$(mktemp -d)
+  if git clone "$SKILLS_URL" "$TEMP_DIR" --quiet 2>/dev/null; then
+    # Move contents to .skills (including .git)
+    rm -rf "${POINCARE_DIR}/.skills"
+    mv "$TEMP_DIR" "${POINCARE_DIR}/.skills"
+    ok "Skills imported"
+  else
+    warn "Could not clone skills repo"
+    echo "  You can add it later:"
+    echo "    cd ${POINCARE_DIR}/.skills && git remote add origin ${SKILLS_URL} && git pull origin main"
   fi
+  rm -rf "$TEMP_DIR"
 fi
 echo ""
 
@@ -187,16 +189,16 @@ echo ""
 ok "Bootstrap complete!"
 echo ""
 echo "Structure:"
-echo "  ~/Poincare/${ORG}/"
+echo "  ~/Poincare/"
 echo "  ├── .github/"
 echo "  ├── .internal/"
 echo "  └── .skills/"
 echo ""
 echo "Next steps:"
-echo "  1. Edit ~/Poincare/${ORG}/.github/profile/README.md"
-echo "  2. Edit ~/Poincare/${ORG}/.internal/onboarding/AGENTS.md"
+echo "  1. Edit ~/Poincare/.github/profile/README.md"
+echo "  2. Edit ~/Poincare/.internal/onboarding/AGENTS.md"
 if [ -n "$SKILLS_URL" ]; then
   echo "  3. Skills loaded from ${SKILLS_URL}"
 else
-  echo "  3. Add skills to ~/Poincare/${ORG}/.skills/"
+  echo "  3. Add skills to ~/Poincare/.skills/"
 fi
