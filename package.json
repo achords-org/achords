@@ -1,0 +1,10 @@
+{
+  "name": "achords",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd web && npm install && npm run build",
+    "dev": "cd web && npm install && npm run dev",
+    "preview": "cd web && npm run preview"
+  }
+}
