@@ -54,6 +54,7 @@ show_help() {
   echo "    --skills <url>        Skills repository URL"
   echo "    --dir <path>          Work directory (default: ~/achords-workspace)"
   echo "    --update-profile      Update repos table in profile README only"
+  echo "    --push                Commit and push changes after update"
   echo "    --help, -h            Show this help"
   echo ""
   echo "  Examples:"
@@ -61,6 +62,7 @@ show_help() {
   echo "    achords obase --org MyOrg"
   echo "    achords obase --org MyOrg --skills https://github.com/org/skills.git"
   echo "    achords obase --update-profile"
+  echo "    achords obase --update-profile --push"
   echo ""
 }
 
@@ -70,6 +72,7 @@ parse_args() {
   SKILLS_URL=""
   WORK_DIR="${HOME}/achords-workspace"
   UPDATE_PROFILE=false
+  AUTO_PUSH=false
   
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -87,6 +90,10 @@ parse_args() {
         ;;
       --update-profile)
         UPDATE_PROFILE=true
+        shift
+        ;;
+      --push)
+        AUTO_PUSH=true
         shift
         ;;
       --help|-h)
@@ -472,6 +479,61 @@ ${repos_table}
   ok "Repos table updated"
   echo ""
   echo "  Updated repos in: ${profile_file}"
+  
+  # Handle push if --push flag is set
+  if [ "$AUTO_PUSH" = true ]; then
+    local github_dir="${WORK_DIR}/.github"
+    
+    if [ ! -d "$github_dir/.git" ]; then
+      err "Not a git repository: ${github_dir}"
+      echo "  Run: achords obase --org ${ORG_NAME}"
+      return 1
+    fi
+    
+    cd "$github_dir"
+    
+    # Check for conflicts
+    local status
+    status=$(git status --porcelain 2>/dev/null)
+    
+    if [ -n "$status" ]; then
+      warn "Uncommitted changes in ${github_dir}:"
+      echo "$status" | head -10
+      echo ""
+    fi
+    
+    # Check if there are changes to commit
+    if [ -z "$status" ]; then
+      ok "No changes to commit"
+      return 0
+    fi
+    
+    # Ask user to confirm push
+    echo ""
+    read -rp "  Commit and push changes? [Y/n] " -n 1 confirm
+    echo ""
+    
+    if [[ "$confirm" =~ ^[Nn]$ ]]; then
+      info "Skipping push"
+      echo "  Changes saved locally in: ${github_dir}"
+      return 0
+    fi
+    
+    # Commit and push
+    info "Committing changes..."
+    git add -A
+    git commit -m "update: repos table" --quiet
+    
+    info "Pushing to remote..."
+    if git push --quiet 2>/dev/null; then
+      ok "Changes pushed to remote"
+    else
+      err "Push failed"
+      echo "  Check your permissions and try again."
+      return 1
+    fi
+  fi
+  
   echo ""
 }
 
