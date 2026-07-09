@@ -971,8 +971,26 @@ versions/
 
 Skills can have platform-specific forks:
 - \`v1.1.0/\` — Standard version
-- \`v1.1.0-windows/\` — Windows fork
-- \`v1.1.0-arm/\` — ARM fork
+- \`v1.1.0-ubuntu/\` — Ubuntu fork (apt dependencies)
+- \`v1.1.0-windows/\` — Windows fork (winget)
+
+### OS Tagging
+
+Skills use granular OS tags with hierarchy:
+
+\`\`\`json
+{
+  "os": "ubuntu",
+  "versions": ["22.04", "24.04"],
+  "family": "debian"
+}
+\`\`\`
+
+**Agent Loading Priority**:
+1. Exact match (ubuntu-24.04)
+2. Family match (ubuntu)
+3. Parent match (debian)
+4. Generic match (linux)
 
 Check \`manifest.json\` for available versions and platforms.
 
