@@ -917,6 +917,245 @@ import_skills() {
   fi
 }
 
+# ── discover skills in existing repos ───────────────────────────────
+discover_org_skills() {
+  header "Discovering skills in existing repositories"
+  
+  local achords_version
+  achords_version=$(get_version)
+  
+  local skills_base="${WORK_DIR}/.skills/skills"
+  mkdir -p "$skills_base"
+  
+  local all_repos
+  all_repos=$(gh repo list "$ORG_NAME" --json name --jq '.[].name' 2>/dev/null)
+  
+  if [ -z "$all_repos" ]; then
+    warn "No repositories found"
+    return 0
+  fi
+  
+  local found=0
+  local imported=0
+  local repo_list=""
+  
+  for repo in $all_repos; do
+    # Skip special repos
+    if [[ "$repo" == ".github" || "$repo" == ".achords" || "$repo" == ".skills" || "$repo" == ".internal" ]]; then
+      continue
+    fi
+    
+    local repo_dir="${WORK_DIR}/${repo}"
+    
+    # Clone if not exists
+    if [ ! -d "$repo_dir" ]; then
+      info "Cloning ${repo}..."
+      git clone "https://github.com/${ORG_NAME}/${repo}.git" "$repo_dir" --quiet 2>/dev/null || continue
+    fi
+    
+    # Determine skill source directories (support both skills/ and .skills/skills/)
+    local source_dirs=()
+    if [ -d "$repo_dir/skills" ]; then
+      source_dirs+=("$repo_dir/skills")
+    fi
+    if [ -d "$repo_dir/.skills/skills" ]; then
+      source_dirs+=("$repo_dir/.skills/skills")
+    fi
+    
+    if [ ${#source_dirs[@]} -eq 0 ]; then
+      continue
+    fi
+    
+    found=$((found + 1))
+    repo_list="${repo_list} ${repo}"
+    
+    for source in "${source_dirs[@]}"; do
+      # Each subdirectory is a potential skill
+      for skill_path in "$source"/*/; do
+        [ -d "$skill_path" ] || continue
+        local skill_name
+        skill_name=$(basename "$skill_path")
+        
+        # Skip hidden dirs
+        if [[ "$skill_name" == .* ]]; then
+          continue
+        fi
+        
+        # Check if skill already exists in org .skills
+        local target="${skills_base}/${skill_name}"
+        if [ -d "$target" ]; then
+          # Skill exists — check for new versions we don't have
+          if [ -d "${skill_path}/versions" ]; then
+            for ver_dir in "${skill_path}/versions/"*/; do
+              [ -d "$ver_dir" ] || continue
+              local ver_name
+              ver_name=$(basename "$ver_dir")
+              if [ ! -d "${target}/versions/${ver_name}" ]; then
+                mkdir -p "${target}/versions/${ver_name}"
+                cp -r "$ver_dir"/* "${target}/versions/${ver_name}/" 2>/dev/null || true
+                info "${repo}/${skill_name}: imported new version ${ver_name}"
+              fi
+            done
+          fi
+          continue
+        fi
+        
+        # New skill — import fully
+        mkdir -p "$target"
+        cp -r "$skill_path"/* "$target/" 2>/dev/null || true
+        
+        # Create minimal manifest if missing
+        if [ ! -f "$target/manifest.json" ]; then
+          local now
+          now=$(date -u +%Y-%m-%d)
+          # Check for versioned structure
+          if [ -d "$target/versions" ]; then
+            local latest_ver
+            latest_ver=$(ls "$target/versions/" 2>/dev/null | sort -V | tail -1)
+            latest_ver="${latest_ver:-v1.0.0}"
+            cat > "$target/manifest.json" << EOF
+{
+  "name": "${skill_name}",
+  "latest": "${latest_ver}",
+  "versions": [
+    {
+      "version": "${latest_ver}",
+      "path": "versions/${latest_ver}",
+      "description": "Imported from ${ORG_NAME}/${repo}",
+      "platforms": [
+        {"os": "linux"},
+        {"os": "macos"},
+        {"os": "windows"}
+      ],
+      "created": "${now}"
+    }
+  ]
+}
+EOF
+          else
+            # Flat structure — wrap in versions/v1.0.0
+            mkdir -p "$target/versions/v1.0.0"
+            # Move all files except manifest into versions/v1.0.0
+            for f in "$target"/*; do
+              local fname
+              fname=$(basename "$f")
+              [ "$fname" = "versions" ] && continue
+              mv "$f" "$target/versions/v1.0.0/"
+            done
+            cat > "$target/manifest.json" << EOF
+{
+  "name": "${skill_name}",
+  "latest": "v1.0.0",
+  "versions": [
+    {
+      "version": "v1.0.0",
+      "path": "versions/v1.0.0",
+      "description": "Imported from ${ORG_NAME}/${repo}",
+      "platforms": [
+        {"os": "linux"},
+        {"os": "macos"},
+        {"os": "windows"}
+      ],
+      "created": "${now}"
+    }
+  ]
+}
+EOF
+            # Create symlink for SKILL.md
+            if [ -f "$target/versions/v1.0.0/SKILL.md" ] && [ ! -f "$target/SKILL.md" ]; then
+              ln -sf "versions/v1.0.0/SKILL.md" "$target/SKILL.md"
+            fi
+          fi
+        fi
+        
+        imported=$((imported + 1))
+        ok "${repo}: imported skill '${skill_name}'"
+      done
+    done
+  done
+  
+  # Update .skills/version.json if skills changed
+  if [ "$imported" -gt 0 ] || [ "$found" -gt 0 ]; then
+    update_skills_version_json
+  fi
+  
+  # Commit in .skills repo
+  if [ "$imported" -gt 0 ] && [ -d "${WORK_DIR}/.skills/.git" ]; then
+    (
+      cd "${WORK_DIR}/.skills"
+      git add -A 2>/dev/null || true
+      git commit -m "feat: import ${imported} skills from existing repos" --quiet 2>/dev/null || true
+      if [ "$AUTO_PUSH" = true ]; then
+        git push --quiet 2>/dev/null || warn ".skills push failed"
+      fi
+    )
+  fi
+  
+  echo ""
+  header "Skills discovery summary"
+  echo "  • Repos with skills: ${found}"
+  echo "  • Skills imported: ${imported}"
+  if [ "$imported" -gt 0 ]; then
+    echo "  • Imported from:${repo_list}"
+  fi
+}
+
+# ── update .skills/version.json ──────────────────────────────────────
+update_skills_version_json() {
+  local skills_base="${WORK_DIR}/.skills/skills"
+  local version_file="${WORK_DIR}/.skills/version.json"
+  
+  # Build skills object
+  local skills_json="{"
+  local first=true
+  for skill_dir in "$skills_base"/*/; do
+    [ -d "$skill_dir" ] || continue
+    local skill_name
+    skill_name=$(basename "$skill_dir")
+    
+    local manifest="${skill_dir}/manifest.json"
+    local latest="v1.0.0"
+    local versions="[]"
+    local description=""
+    
+    if [ -f "$manifest" ]; then
+      latest=$(grep '"latest"' "$manifest" | sed 's/.*"latest"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+      versions=$(grep -A 100 '"versions"' "$manifest" | grep '"version"' | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' | tr '\n' ' ' | sed 's/ /", "/g')
+      versions='["'"$versions"'"]'
+      versions=$(echo "$versions" | sed 's/, ""/]/' | sed 's/""/"v1.0.0"}/')
+      description=$(grep '"description"' "$manifest" | head -1 | sed 's/.*"description"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+    fi
+    
+    if [ "$first" = true ]; then
+      first=false
+    else
+      skills_json+=","
+    fi
+    
+    skills_json+=$(cat << EOF
+    "${skill_name}": {
+      "latest": "${latest}",
+      "description": "${description:-Imported skill}"
+    }
+EOF
+)
+  done
+  skills_json+="}"
+  
+  local now
+  now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  
+  cat > "$version_file" << EOF
+{
+  "version": "${achords_version}",
+  "updated_at": "${now}",
+  "description": "Shared skills for ${ORG_NAME} organization",
+  "spec": "https://agentskills.io/specification",
+  "skills": ${skills_json}
+}
+EOF
+}
+
 # ── setup repo for agent memory ──────────────────────────────────────
 setup_repo_memory() {
   local repo_dir="$1"
@@ -1608,10 +1847,13 @@ EOF
     warn ".achords repo not found at ${achords_dir} — skipping"
   fi
 
-  # ── Step 2: Upgrade all existing repos ──
+  # ── Step 2: Discover new skills from existing repos ──
+  discover_org_skills
+
+  # ── Step 3: Upgrade all existing repos ──
   update_all_agents_headers "full"
   
-  # ── Step 3: Summary ──
+  # ── Step 4: Summary ──
   echo ""
   header "Upgrade complete"
   echo "  • Version: v${guide_version:-none} → v${achords_version}"
@@ -1750,6 +1992,7 @@ main() {
   init_achords_repo || warn ".achords init skipped — continuing with repo injection"
   generate_files
   import_skills
+  discover_org_skills
   update_all_agents_headers
   summary
 }

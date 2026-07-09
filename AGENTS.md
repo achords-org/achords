@@ -166,7 +166,7 @@ Format in AGENTS.md:
 The only implemented product. Sets up GitHub orgs for multi-agent collaboration.
 
 ```bash
-# Create org (with push)
+# Create org (with push) — auto-discovers skills in existing repos
 achords obase --org my-company --push
 
 # Configure a single repo
@@ -183,7 +183,9 @@ What it creates:
 - `.github/` — Org profile
 - `.achords/` — Agent rules + shared memory
 - `.internal/` — Team docs + onboarding
-- `.skills/` — Shared skills library
+- `.skills/` — Shared skills library (auto-populated from repos with `skills/` or `.skills/skills/` dirs)
+
+**Skills auto-discovery**: During init, obase scans ALL repos for `skills/` or `.skills/skills/` directories and imports them into the org `.skills` repo. Skills get proper manifests and version.json entries. Existing skills are never overwritten — only new versions are added.
 
 **Upgrade flow**: Each achords release ships improved guide templates. Run `--upgrade` to sync existing orgs — custom repo rules under `## Repository-Specific Rules` are preserved.
 
