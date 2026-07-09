@@ -1,7 +1,7 @@
 ---
 title: Integración de Repos
 description: Cómo los repos importan reglas de la org via git submodules
-tags: [architecture]
+tags: [architecture, reference, stable, both]
 ---
 
 # Integración de Repos

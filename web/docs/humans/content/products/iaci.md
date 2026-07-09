@@ -1,7 +1,7 @@
 ---
 title: iaci
 description: IA on CI — reviews automatizados
-tags: [products, coming-soon]
+tags: [iaci, coordination, reference, coming-soon, both]
 ---
 
 # iaci

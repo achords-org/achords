@@ -1,7 +1,7 @@
 ---
 title: Aislamiento de Memoria
 description: Cómo se organiza la memoria across orgs y repos
-tags: [architecture, memory]
+tags: [architecture, memory, concept, stable, both]
 ---
 
 # Aislamiento de Memoria

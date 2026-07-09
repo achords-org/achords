@@ -1,7 +1,7 @@
 ---
 title: Flujo del Agente
 description: Todo sigue este patrón de sesión
-tags: [architecture, flow]
+tags: [architecture, coordination, concept, stable, agent]
 ---
 
 # Flujo del Agente

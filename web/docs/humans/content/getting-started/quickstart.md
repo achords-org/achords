@@ -1,7 +1,7 @@
 ---
 title: Quick Start
 description: Bootstrap una organización y onboardea tu primer repo en 5 minutos
-tags: [getting-started]
+tags: [getting-started, tutorial, stable, human]
 ---
 
 # Quick Start

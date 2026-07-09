@@ -1,7 +1,7 @@
 ---
 title: Instalación
 description: Instala Achords y configura tu primera organización
-tags: [getting-started, install]
+tags: [getting-started, guide, stable, human]
 ---
 
 # Instalación

@@ -1,7 +1,7 @@
 ---
 title: rcord
 description: Repository Coordination — coming soon
-tags: [products, coming-soon]
+tags: [rcord, coordination, reference, coming-soon, both]
 ---
 
 # rcord

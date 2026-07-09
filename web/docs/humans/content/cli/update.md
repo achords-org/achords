@@ -1,7 +1,7 @@
 ---
 title: update
 description: Actualiza achords a última versión
-tags: [cli]
+tags: [cli, guide, stable, human]
 ---
 
 # achords update

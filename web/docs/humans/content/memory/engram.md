@@ -1,7 +1,7 @@
 ---
 title: Engram
 description: Memoria persistente across sesiones via Engram
-tags: [memory]
+tags: [memory, reference, stable, both]
 ---
 
 # Engram

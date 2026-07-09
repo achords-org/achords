@@ -1,7 +1,7 @@
 ---
 title: version
 description: Verifica la versión instalada
-tags: [cli]
+tags: [cli, reference, stable, human]
 ---
 
 # achords version

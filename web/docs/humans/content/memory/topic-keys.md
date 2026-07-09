@@ -1,7 +1,7 @@
 ---
 title: Topic Keys
 description: Organizar memorias por topic
-tags: [memory, organization]
+tags: [memory, reference, stable, agent]
 ---
 
 # Topic Keys

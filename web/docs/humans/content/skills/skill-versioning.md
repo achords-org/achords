@@ -1,7 +1,7 @@
 ---
 title: Versionado
 description: Skills se versionan por directorio
-tags: [skills, versioning]
+tags: [skills, reference, stable, agent]
 ---
 
 # Versionado

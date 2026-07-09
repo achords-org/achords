@@ -1,7 +1,7 @@
 ---
 title: obase
 description: Organization Base — estructura y reglas de agentes
-tags: [products]
+tags: [obase, coordination, reference, stable, both]
 ---
 
 # obase

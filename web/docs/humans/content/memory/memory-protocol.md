@@ -1,7 +1,7 @@
 ---
 title: Protocolo de Memoria
 description: Cuándo guardar, buscar y resumir
-tags: [memory, protocol]
+tags: [memory, reference, stable, agent]
 ---
 
 # Protocolo de Memoria

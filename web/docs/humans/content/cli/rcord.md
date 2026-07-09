@@ -1,7 +1,7 @@
 ---
 title: rcord
 description: Coordinación de repos — coming soon
-tags: [cli, coming-soon]
+tags: [cli, rcord, reference, coming-soon, human]
 ---
 
 # achords rcord

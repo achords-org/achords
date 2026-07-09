@@ -1,7 +1,7 @@
 ---
 title: kbweb
 description: KB Web — base de conocimiento buscable
-tags: [products, coming-soon]
+tags: [kbweb, memory, reference, coming-soon, both]
 ---
 
 # kbweb

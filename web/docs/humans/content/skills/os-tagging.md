@@ -1,7 +1,7 @@
 ---
 title: OS Tagging
 description: Skills específicos por plataforma con herencia
-tags: [skills, platforms]
+tags: [skills, reference, stable, agent]
 ---
 
 # OS Tagging

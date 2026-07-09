@@ -1,7 +1,7 @@
 ---
 title: Conceptos
 description: Modelo mental core de Achords
-tags: [getting-started, concepts]
+tags: [getting-started, concept, stable, both]
 ---
 
 # Conceptos

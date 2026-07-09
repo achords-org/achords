@@ -1,7 +1,7 @@
 ---
 title: Estructura de Organización
 description: Qué vive dónde en una organización Achords
-tags: [architecture]
+tags: [architecture, concept, stable, both]
 ---
 
 # Estructura de Organización

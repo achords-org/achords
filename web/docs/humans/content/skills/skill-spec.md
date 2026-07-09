@@ -1,7 +1,7 @@
 ---
 title: Especificación de Skills
 description: Skills siguen el Agent Skills spec
-tags: [skills]
+tags: [skills, reference, stable, agent]
 ---
 
 # Especificación de Skills

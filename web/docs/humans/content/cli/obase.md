@@ -1,7 +1,7 @@
 ---
 title: obase
 description: Inicializa una organización o configura un repo
-tags: [cli]
+tags: [cli, obase, reference, stable, human]
 ---
 
 # achords obase

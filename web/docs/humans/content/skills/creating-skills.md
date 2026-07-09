@@ -1,7 +1,7 @@
 ---
 title: Crear Skills
 description: Guía paso a paso para crear nuevos skills
-tags: [skills, guide]
+tags: [skills, guide, stable, human]
 ---
 
 # Crear Skills
