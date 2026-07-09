@@ -879,58 +879,69 @@ EOF
 
 > Agent configuration for this repository.
 
-## Reading Order
+## Agent Flow
 
-1. \`.achords/AGENTS.md\` — Org-wide rules (this is the main entry point)
-2. \`.achords/config/conventions.json\` — Code conventions
-3. \`.achords/config/policies.json\` — Org policies
-4. \`.engram/config.json\` — Repo context (project: ${repo_name})
-5. This file — Repo-specific rules
-
-## Organization Rules
-
-Read \`.achords/AGENTS.md\` for organization-wide agent rules.
-
-## Repository-Specific Rules
-
-Add your repo-specific rules here.
-
-## Memory
-
-### Repo Memory (isolated)
-
-Stored in \`.engram/\` with project name \`${repo_name}\`.
+### 1. Session Start (MANDATORY)
 
 \`\`\`bash
-# Save repo-specific decision
+# Sync org rules
+git submodule update --remote .achords
+
+# Load org context
+mem_search(project: "${ORG_NAME}", query: "recent changes", limit: 3)
+
+# Load repo context
+mem_search(project: "${repo_name}", query: "last session", limit: 3)
+\`\`\`
+
+### 2. Mandatory Reads (before ANY work)
+
+| File | Why |
+|------|-----|
+| \`.achords/AGENTS.md\` | Org rules + resource table |
+| \`.engram/config.json\` | Project name: ${repo_name} |
+
+### 3. On-Demand Reads (when needed)
+
+| File | When to Read |
+|------|--------------|
+| \`.achords/config/conventions.json\` | Before writing code |
+| \`.achords/config/policies.json\` | Before access decisions |
+| \`.skills/skills/*.md\` | When task matches skill description |
+| \`.internal/onboarding/\` | When setting up new repo |
+
+### 4. During Work
+
+\`\`\`bash
+# After significant decision
 mem_save(
   project: "${repo_name}",
-  title: "Decision: use X for auth",
+  title: "Decision: use X",
   type: "decision",
   content: "We chose X because...",
   topic_key: "decisions/architecture"
 )
 
-# Search repo memory
-mem_search(project: "${repo_name}", query: "auth", limit: 5)
+# Before starting new task
+mem_search(project: "${repo_name}", query: "similar task", limit: 5)
 \`\`\`
 
-### Org Memory (shared)
-
-Available via \`.achords/.engram/\` submodule.
-
-\`\`\`bash
-# Load org conventions
-mem_search(project: "${ORG_NAME}", query: "conventions", limit: 5)
-\`\`\`
-
-### Session Summary
-
-At session end, always save:
+### 5. Session End (ALWAYS)
 
 \`\`\`bash
 mem_session_summary(content: "## Goal\n...## Accomplished\n...")
 \`\`\`
+
+## Reading Order
+
+1. \`.achords/AGENTS.md\` — Org rules (main entry point)
+2. \`.engram/config.json\` — Repo project name
+3. This file — Repo-specific rules
+4. On-demand files as needed
+
+## Repository-Specific Rules
+
+Add your repo-specific rules here.
 
 ## SDD Integration
 
