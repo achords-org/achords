@@ -1,161 +1,73 @@
-# Developer Guide
+# Achords — For Humans
 
-> How to set up and use achords for your team.
-
-## What is Achords?
-
-Achords is an orchestration protocol for multi-agent software development. It lets AI agents (OpenCode, Claude Code, Cursor, etc.) work together with shared knowledge and persistent memory.
+> Developer setup and usage guide.
 
 ## Quick Start
 
-### One Command Setup
-
 ```bash
-curl -fsSL https://raw.githubusercontent.com/achords-org/.internal/main/onboarding/scripts/setup.sh | bash
+# Install
+npm install -g achords
+
+# Setup organization
+achords obase --org MyOrg
+
+# Configure existing repo
+achords obase --repo my-repo
 ```
 
-This installs:
-- **OpenCode** — AI coding agent
-- **Gentle AI** — Agent orchestration
-- **Engram** — Persistent memory
+## What You Get
 
-### Manual Setup
-
-1. Install OpenCode:
-   ```bash
-   curl -fsSL https://opencode.ai/install | bash
-   ```
-
-2. Install achords:
-   ```bash
-   npm install -g achords
-   ```
-
-3. Setup your org:
-   ```bash
-   achords obase --org your-org
-   ```
-
-## How It Works
-
-### For Developers
-
-1. Clone your repo with submodules:
-   ```bash
-   git clone --recurse-submodules https://github.com/your-org/your-repo.git
-   ```
-
-2. Open in OpenCode:
-   ```bash
-   cd your-repo
-   opencode
-   ```
-
-3. The agent reads `.achords/AGENTS.md` automatically
-
-4. Start working — memory persists across sessions
-
-### For Teams
-
-1. Setup org with achords:
-   ```bash
-   achords obase --org your-org
-   ```
-
-2. Configure existing repos:
-   ```bash
-   achords obase --repo your-repo
-   ```
-
-3. Add team members — they run the setup script
-
-## Directory Structure
+After running `achords obase`:
 
 ```
 your-repo/
-├── .achords/                    # Org rules (submodule)
-│   ├── .engram/                 # Shared org memory
-│   ├── AGENTS.md                # Agent rules
-│   ├── config/                  # Policies & conventions
-│   │   ├── policies.json
-│   │   └── conventions.json
-│   └── skills/                  # Shared skills
-├── .engram/                     # Repo memory
-│   └── config.json              # project_name: "your-repo"
-├── AGENTS.md                    # Repo agent config
+├── .achords/          # Org rules (submodule)
+├── .engram/           # Repo memory
+│   └── config.json    # project_name: "your-repo"
+├── AGENTS.md          # Agent entry point
 └── src/
 ```
 
 ## Commands
 
 ```bash
-# Check version
-achords version
-
-# Update
-achords update
-
-# Setup org
-achords obase --org your-org
-
-# Configure repo
-achords obase --repo your-repo
-
-# Update profile
-achords obase --update-profile --push
+achords version              # Check version
+achords update               # Update to latest
+achords obase --org <name>   # Setup org
+achords obase --repo <name>  # Configure repo
+achords obase --update-profile  # Update org profile
 ```
 
-## Memory
+## How It Works
 
-### Org Memory (shared)
-
-Stored in `.achords/.engram/` — synced via git.
-
-Contains:
-- Conventions and patterns
-- Architecture decisions
-- Shared knowledge
-
-### Repo Memory (isolated)
-
-Stored in `.engram/` — per repo.
-
-Contains:
-- Repo-specific bugs
-- Feature decisions
-- Local context
+1. **obase** sets up your GitHub org for multi-agent collaboration
+2. Each repo gets `.achords/` as a submodule (org rules)
+3. Each repo gets `.engram/` for isolated memory
+4. AI agents read `AGENTS.md` to understand the setup
 
 ## Updating Org Rules
 
-1. Edit files in `.achords/`
-2. Commit and push
-3. In each repo:
-   ```bash
-   git submodule update --remote
-   ```
+```bash
+# In .achords/ repo
+# Edit files, commit, push
+
+# In each repo
+git submodule update --remote
+```
 
 ## Troubleshooting
 
-### Agent not reading .achords
-
+**Agent not reading .achords:**
 ```bash
 git submodule update --init --recursive
 ```
 
-### Memory not persisting
-
+**Memory not persisting:**
 ```bash
 engram doctor
 ```
 
-### Version mismatch
+## More
 
-```bash
-achords version  # Check installed vs latest
-achords update   # Update
-```
-
-## Support
-
-- GitHub: https://github.com/achords-org/.achords/issues
-- Docs: See `.achords/AGENTS.md` for agent rules
+- [Agent Documentation](/docs/agents/) — How agents integrate
+- [GitHub](https://github.com/cxto21/achords) — Source code
