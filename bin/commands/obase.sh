@@ -87,13 +87,14 @@ show_help() {
   echo "    --repo <name>         Setup existing repo for agent memory"
   echo "    --update-profile      Update repos table in profile README only"
   echo "    --update-headers      Update AGENTS.md headers in all repos"
-  echo "    --push                Commit and push changes after update"
+  echo "    --push                Commit and push changes (works with all modes)"
   echo "    --help, -h            Show this help"
   echo ""
   echo "  Examples:"
   echo "    achords obase"
   echo "    achords obase --org MyOrg"
   echo "    achords obase --org MyOrg --skills https://github.com/org/skills.git"
+  echo "    achords obase --org MyOrg --push"
   echo "    achords obase --repo my-project"
   echo "    achords obase --update-profile"
   echo "    achords obase --update-profile --push"
@@ -395,13 +396,16 @@ clone_repos() {
   
   mkdir -p "$WORK_DIR"
   
-  for repo in .github .internal .skills; do
+  for repo in .github .internal .skills .achords; do
     local target="${WORK_DIR}/${repo}"
     if [ -d "$target" ]; then
       ok "${repo} exists locally"
     else
       info "Cloning ${repo}..."
-      git clone "https://github.com/${ORG_NAME}/${repo}.git" "$target" --quiet
+      git clone "https://github.com/${ORG_NAME}/${repo}.git" "$target" --quiet 2>/dev/null || {
+        warn "Could not clone ${repo}, will init later"
+        continue
+      }
       ok "${repo} cloned"
     fi
   done
@@ -618,7 +622,13 @@ EOF
     git add -A
     git commit -m "init: achords configuration structure with .engram" --quiet
     
-    ok ".achords initialized"
+    # Push to remote so submodules work for other repos
+    if git push --quiet origin main 2>/dev/null || git push --quiet origin master 2>/dev/null; then
+      ok ".achords pushed to remote"
+    else
+      warn ".achords committed locally but push failed — push manually:"
+      echo "    cd ${achords_dir} && git push -u origin main"
+    fi
   )
 }
 
@@ -1155,13 +1165,21 @@ summary() {
   echo "    ├── .internal/   → Team docs & onboarding"
   echo "    └── .skills/     → Shared skills library"
   echo ""
-  echo "  For new repositories, run:"
-  echo "    achords obase --repo <repo-name>"
+  echo "  Existing repos have been injected with:"
+  echo "    • AGENTS.md with achords resource table"
+  echo "    • .engram/config.json with project context"
+  echo "    • .achords submodule for org rules"
+  echo "    • .skills submodule for shared skills"
   echo ""
-  echo "  This will:"
-  echo "    • Create .engram/config.json with repo project name"
-  echo "    • Add .achords submodule for org rules"
-  echo "    • Create AGENTS.md with memory instructions"
+  if [ "$AUTO_PUSH" = true ]; then
+    echo "  ✓ All changes pushed to remote"
+  else
+    echo "  Changes are committed locally. To push all repos:"
+    echo "    achords obase --org ${ORG_NAME} --update-headers --push"
+  fi
+  echo ""
+  echo "  For NEW repositories created later:"
+  echo "    achords obase --repo <repo-name>"
   echo ""
   echo "  Next steps:"
   echo "    1. Edit ${WORK_DIR}/.github/profile/README.md"
@@ -1317,18 +1335,37 @@ EOF
 EOF
     fi
     
+    # Commit changes if any
+    if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+      info "${repo}: committing injected configuration..."
+      git add -A 2>/dev/null || true
+      git commit -m "chore: inject achords agent configuration (AGENTS.md, .engram, submodules)" --quiet 2>/dev/null || true
+    fi
+    
+    # Push if --push flag is set
+    if [ "$AUTO_PUSH" = true ]; then
+      if git push --quiet 2>/dev/null; then
+        ok "${repo}: pushed to remote"
+      else
+        warn "${repo}: push failed"
+      fi
+    fi
+    
     cd "$WORK_DIR"
   done
   
   echo ""
+  # Summary (updated to show push hint if not auto-pushed)
   header "Summary"
   echo "  • Repos scanned: ${count}"
   echo "  • Headers updated: ${updated}"
   echo "  • Headers created: ${created}"
   echo ""
-  echo "  To commit changes in each repo:"
-  echo "    cd <repo> && git add . && git commit -m 'chore: update achords headers'"
-  echo ""
+  if [ "$AUTO_PUSH" = false ] && [ "$count" -gt 0 ]; then
+    echo "  To commit and push changes in each repo:"
+    echo "    achords obase --org ${ORG_NAME} --update-headers --push"
+    echo ""
+  fi
 }
 
 # ── main ─────────────────────────────────────────────────────────────
@@ -1440,7 +1477,7 @@ main() {
   check_local
   create_repos
   clone_repos
-  init_achords_repo
+  init_achords_repo || warn ".achords init skipped — continuing with repo injection"
   generate_files
   import_skills
   update_all_agents_headers
@@ -1451,4 +1488,3 @@ main() {
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
   main "$@"
 fi
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
