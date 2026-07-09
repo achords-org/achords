@@ -1410,6 +1410,37 @@ EOF
   return 0
 }
 
+# ── prompt push (interactive) ───────────────────────────────────────
+prompt_push() {
+  echo ""
+  echo "  ┌─────────────────────────────────────────────┐"
+  echo "  │  ⚡ Changes are committed locally.           │"
+  echo "  │  Do you want to push them now?  (y/N)       │"
+  echo "  └─────────────────────────────────────────────┘"
+  echo -n "  → "
+  read -r push_now
+  if [[ "$push_now" =~ ^[yYsS] ]]; then
+    header "Pushing all repositories..."
+    for repo_dir in "$WORK_DIR"/*/; do
+      [ -d "$repo_dir/.git" ] || continue
+      local repo_name
+      repo_name=$(basename "$repo_dir")
+      echo -n "  • ${repo_name}..."
+      if git -C "$repo_dir" push --quiet 2>/dev/null; then
+        echo " ✓"
+      else
+        echo " ✗ (push failed)"
+      fi
+    done
+    echo ""
+    ok "All pushed"
+  else
+    echo ""
+    echo "  To push later:"
+    echo "    achords obase --org ${ORG_NAME} --update-headers --push"
+  fi
+}
+
 # ── summary ──────────────────────────────────────────────────────────
 summary() {
   echo ""
@@ -1435,8 +1466,7 @@ summary() {
   if [ "$AUTO_PUSH" = true ]; then
     echo "  ✓ All changes pushed to remote"
   else
-    echo "  Changes are committed locally. To push all repos:"
-    echo "    achords obase --org ${ORG_NAME} --update-headers --push"
+    prompt_push
   fi
   echo ""
   echo "  For NEW repositories created later:"
@@ -1696,11 +1726,12 @@ EOF
   echo ""
   if [ "$AUTO_PUSH" = false ] && [ "$count" -gt 0 ]; then
     if [ "$full_regenerate" = "full" ]; then
-      echo "  To push: achords obase --org ${ORG_NAME} --upgrade --push"
+      push_msg="To push: achords obase --org ${ORG_NAME} --upgrade --push"
     else
-      echo "  To commit and push changes in each repo:"
-      echo "    achords obase --org ${ORG_NAME} --update-headers --push"
+      push_msg="To commit and push changes in each repo: achords obase --org ${ORG_NAME} --update-headers --push"
     fi
+    # Only print the message, don't prompt — caller handles prompting
+    echo "  ${push_msg}"
     echo ""
   fi
 }
@@ -1873,7 +1904,7 @@ EOF
   echo "  • Version: v${guide_version:-none} → v${achords_version}"
   echo ""
   if [ "$AUTO_PUSH" = false ]; then
-    echo "  To push: achords obase --org ${ORG_NAME} --upgrade --push"
+    prompt_push
   fi
 }
 
