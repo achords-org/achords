@@ -21,11 +21,9 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install dependencies
-        run: npm install --ignore-scripts
-
-      - name: Build
-        run: npm run build
+      - name: Install CLI dependencies (no build needed for publish)
+        run: |
+          npm install --ignore-scripts --no-optional --no-audit --no-fund
 
       - name: Publish to npm
         run: npm publish
