@@ -36,6 +36,6 @@ Achords uses a shared memory system (`.engram`) and skill-based architecture whe
 
 ## Links
 
-- GitHub: https://github.com/cxto21/achords
+- GitHub: https://github.com/achords-org/achords
 - npm: https://www.npmjs.com/package/achords
 - License: MIT
