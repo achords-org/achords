@@ -100,20 +100,30 @@ SESSION START
 ```
 .skills/
 ├── version.json                    # Global version index
-├── skills/
-│   ├── testing/
-│   │   ├── manifest.json           # Version list
-│   │   ├── SKILL.md                # Reference to latest
-│   │   └── versions/
-│   │       ├── v1.0.0.md           # Original
-│   │       └── v1.1.0.md           # Updated
-│   └── code-review/
-│       ├── manifest.json
-│       ├── SKILL.md
-│       └── versions/
-│           ├── v1.0.0.md
-│           └── v1.1.0.md
+├── AGENTS.md                       # Agent entry point
+└── skills/
+    ├── testing/
+    │   ├── manifest.json           # Version list
+    │   ├── SKILL.md                # Reference to latest
+    │   └── versions/
+    │       ├── v1.0.0/             # Version directory
+    │       │   ├── SKILL.md        # Skill instructions
+    │       │   └── scripts/        # Helper scripts (optional)
+    │       └── v1.1.0/
+    │           ├── SKILL.md
+    │           └── scripts/
+    └── code-review/
+        ├── manifest.json
+        ├── SKILL.md
+        └── versions/
+            ├── v1.0.0/
+            └── v1.1.0/
 ```
+
+**Each version is a directory** because skills can contain:
+- `SKILL.md` — Main instructions
+- `scripts/` — Helper scripts (optional)
+- `references/` — Additional docs (optional)
 
 ### Manifest Format
 
@@ -124,14 +134,14 @@ SESSION START
   "versions": [
     {
       "version": "v1.0.0",
-      "file": "versions/v1.0.0.md",
+      "path": "versions/v1.0.0",
       "description": "Initial version",
       "platforms": ["linux", "macos", "windows"],
       "created": "2026-07-08"
     },
     {
       "version": "v1.1.0",
-      "file": "versions/v1.1.0.md",
+      "path": "versions/v1.1.0",
       "description": "Added gotchas and validation",
       "platforms": ["linux", "macos", "windows"],
       "created": "2026-07-09"
@@ -146,9 +156,15 @@ Skills can have platform-specific forks:
 
 ```
 versions/
-├── v1.1.0.md           # Standard version
-├── v1.1.0-windows.md   # Windows fork
-└── v1.1.0-arm.md       # ARM fork
+├── v1.1.0/           # Standard version
+│   ├── SKILL.md
+│   └── scripts/
+├── v1.1.0-windows/   # Windows fork
+│   ├── SKILL.md
+│   └── scripts/
+└── v1.1.0-arm/       # ARM fork
+    ├── SKILL.md
+    └── scripts/
 ```
 
 Forks reference parent via `forked_from` in manifest:
@@ -156,7 +172,7 @@ Forks reference parent via `forked_from` in manifest:
 ```json
 {
   "version": "v1.1.0-windows",
-  "file": "versions/v1.1.0-windows.md",
+  "path": "versions/v1.1.0-windows",
   "description": "Windows-specific fork",
   "platforms": ["windows"],
   "forked_from": "v1.1.0",
