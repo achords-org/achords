@@ -391,11 +391,15 @@ EOF
 > This file defines how AI agents work within this organization.
 > Each repo's AGENTS.md should reference this file.
 
-## How to Use
+## Reading Order
 
-1. Each repository has an `AGENTS.md` in its root
-2. That file tells agents to read `.achords/AGENTS.md` for org-wide rules
-3. Repo-specific rules stay in the repo's own `AGENTS.md`
+Always read in this order:
+
+1. `.achords/AGENTS.md` — This file (org-wide rules)
+2. `.achords/config/conventions.json` — Code conventions
+3. `.achords/config/policies.json` — Org policies
+4. `repo/.engram/config.json` — Repo context
+5. `repo/AGENTS.md` — Repo-specific rules
 
 ## Structure
 
@@ -403,22 +407,56 @@ EOF
 |------|---------|
 | `version.json` | Current version and metadata |
 | `.engram/` | Shared org memory (git-synced) |
-| `.engram/manifest.json` | Index of shared chunks |
-| `.engram/chunks/` | Shared memory chunks |
 | `config/` | Organization-wide policies and schemas |
-| `config/policies.json` | Access and collaboration policies |
-| `config/schemas/` | Data schemas for agent communication |
-| `skills/` | Shared skills across all repos |
-| `agents/` | Agent-specific configurations |
-| `templates/` | Templates for new repos and agents |
+| `skills/` | Shared skills (Agent Skills spec) |
 
-## Memory Sharing
+## Memory Protocol
 
-Org-wide memory is stored in `.engram/` and synced via git.
-Agents can load org knowledge using:
+### At Session Start
+
 ```bash
+# Update .achords submodule
+git submodule update --remote .achords
+
+# Load org knowledge
 mem_search(project: "ORG_NAME", query: "conventions", limit: 5)
 ```
+
+### During Work
+
+Save after significant decisions:
+
+```bash
+# Org-wide pattern
+mem_save(
+  project: "ORG_NAME",
+  title: "Decision: use pattern X",
+  type: "decision",
+  content: "We decided to use X because...",
+  topic_key: "decisions/architecture"
+)
+```
+
+### At Session End
+
+```bash
+mem_session_summary(content: "## Goal\n...## Accomplished\n...")
+```
+
+## Skills
+
+Skills follow the [Agent Skills specification](https://agentskills.io/specification):
+
+```bash
+cat .skills/skills/testing/SKILL.md
+```
+
+## Modification Rules
+
+- **Don't modify** `.achords/` directly
+- **Don't modify** other repos' `.engram/config.json`
+- **Do modify** current repo files
+- **Do create** shared skills in `.skills/skills/`
 
 ## Versioning
 
@@ -426,29 +464,6 @@ When the organization updates agent rules:
 1. Update files in this repo
 2. Bump version in `version.json`
 3. All repos pull the latest via submodule update
-
-## Getting Started
-
-For repository owners:
-```bash
-# Add .achords as submodule
-git submodule add https://github.com/ORG/.achords.git .achords
-
-# Create AGENTS.md in your repo root
-cat > AGENTS.md << 'AGENTS_EOF'
-# AGENTS.md
-
-> Agent configuration for this repository.
-
-## Organization Rules
-
-Read `.achords/AGENTS.md` for organization-wide agent rules.
-
-## Repository-Specific Rules
-
-Add your repo-specific rules here.
-AGENTS_EOF
-```
 EOF
   
   # Create default policies
@@ -845,6 +860,14 @@ EOF
 
 > Agent configuration for this repository.
 
+## Reading Order
+
+1. \`.achords/AGENTS.md\` — Org-wide rules (this is the main entry point)
+2. \`.achords/config/conventions.json\` — Code conventions
+3. \`.achords/config/policies.json\` — Org policies
+4. \`.engram/config.json\` — Repo context (project: ${repo_name})
+5. This file — Repo-specific rules
+
 ## Organization Rules
 
 Read \`.achords/AGENTS.md\` for organization-wide agent rules.
@@ -855,20 +878,54 @@ Add your repo-specific rules here.
 
 ## Memory
 
-This repository uses engram for persistent agent memory.
+### Repo Memory (isolated)
 
-- **Repo memory**: Stored in \`.engram/\` with project name \`${repo_name}\`
-- **Org memory**: Available via \`.achords/.engram/\` submodule
+Stored in \`.engram/\` with project name \`${repo_name}\`.
 
-### Loading Org Knowledge
 \`\`\`bash
+# Save repo-specific decision
+mem_save(
+  project: "${repo_name}",
+  title: "Decision: use X for auth",
+  type: "decision",
+  content: "We chose X because...",
+  topic_key: "decisions/architecture"
+)
+
+# Search repo memory
+mem_search(project: "${repo_name}", query: "auth", limit: 5)
+\`\`\`
+
+### Org Memory (shared)
+
+Available via \`.achords/.engram/\` submodule.
+
+\`\`\`bash
+# Load org conventions
 mem_search(project: "${ORG_NAME}", query: "conventions", limit: 5)
 \`\`\`
 
-### Saving Repo Memory
+### Session Summary
+
+At session end, always save:
+
 \`\`\`bash
-mem_save(project: "${repo_name}", title: "Decision made", type: "decision", ...)
+mem_session_summary(content: "## Goal\n...## Accomplished\n...")
 \`\`\`
+
+## SDD Integration
+
+When running SDD phases:
+
+1. Update \`.achords\` submodule before \`sdd-apply\` or \`sdd-verify\`
+2. Check skill versions in \`.skills/skills/\`
+3. If you modified a skill, commit new version
+
+## Modification Rules
+
+- **Don't modify** \`.achords/\` directly
+- **Do modify** current repo files
+- **Do create** shared skills in \`.skills/skills/\`
 EOF
     git add AGENTS.md 2>/dev/null || true
   fi
