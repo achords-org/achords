@@ -1,7 +1,6 @@
 ---
 title: Achords
 description: Multi-agent coordination protocol for software teams
-aliases: [Home, Index]
 ---
 
 # Achords
