@@ -20,10 +20,10 @@ achords obase --org my-company
 
 | Producto | Estado | Descripción |
 |----------|--------|-------------|
-| [[obase]] | Disponible | Estructura de organización y reglas de agentes |
-| [[rcord]] | Próximamente | Coordinación de repos y estándares de commit |
-| [[iaci]] | Próximamente | IA en CI — reviews automatizados |
-| [[kbweb]] | Próximamente | Base de conocimiento buscable |
+| [[products/obase]] | Disponible | Estructura de organización y reglas de agentes |
+| [[products/rcord]] | Próximamente | Coordinación de repos y estándares de commit |
+| [[products/iaci]] | Próximamente | IA en CI — reviews automatizados |
+| [[products/kbweb]] | Próximamente | Base de conocimiento buscable |
 
 ## Links
 
