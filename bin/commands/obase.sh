@@ -87,6 +87,7 @@ show_help() {
   echo "    --repo <name>         Setup existing repo for agent memory"
   echo "    --update-profile      Update repos table in profile README only"
   echo "    --update-headers      Update AGENTS.md headers in all repos"
+  echo "    --upgrade             Upgrade guides to current achords version (regenerates AGENTS.md body, preserves custom rules)"
   echo "    --push                Commit and push changes (works with all modes)"
   echo "    --help, -h            Show this help"
   echo ""
@@ -98,6 +99,8 @@ show_help() {
   echo "    achords obase --repo my-project"
   echo "    achords obase --update-profile"
   echo "    achords obase --update-profile --push"
+  echo "    achords obase --org MyOrg --upgrade"
+  echo "    achords obase --org MyOrg --upgrade --push"
   echo ""
 }
 
@@ -108,6 +111,7 @@ parse_args() {
   WORK_DIR=""
   UPDATE_PROFILE=false
   UPDATE_HEADERS=false
+  UPGRADE_GUIDES=false
   AUTO_PUSH=false
   REPO_NAME=""
   DIR_OVERRIDE=false
@@ -144,6 +148,10 @@ parse_args() {
         ;;
       --update-headers)
         UPDATE_HEADERS=true
+        shift
+        ;;
+      --upgrade)
+        UPGRADE_GUIDES=true
         shift
         ;;
       --push)
@@ -1190,7 +1198,13 @@ summary() {
 
 # ── update AGENTS.md headers in all repos ──────────────────────────
 update_all_agents_headers() {
-  header "Updating AGENTS.md headers in all repositories"
+  local full_regenerate="${1:-false}"
+  
+  if [ "$full_regenerate" = "full" ]; then
+    header "Regenerating AGENTS.md in all repositories"
+  else
+    header "Updating AGENTS.md headers in all repositories"
+  fi
   
   local achords_version
   achords_version=$(get_version)
@@ -1207,6 +1221,7 @@ update_all_agents_headers() {
   local count=0
   local updated=0
   local created=0
+  local upgraded=0
   
   for repo in $repos; do
     # Skip special repos
@@ -1232,19 +1247,79 @@ update_all_agents_headers() {
     if [ -f "AGENTS.md" ]; then
       # Check if header exists and version matches
       if grep -q "<!-- achords:header:v${achords_version} -->" AGENTS.md; then
-        ok "${repo}: header up to date (v${achords_version})"
-        continue
+        if [ "$full_regenerate" != "full" ]; then
+          ok "${repo}: header up to date (v${achords_version})"
+          continue
+        fi
+        # In full regenerated mode, continue to regenerate body
       fi
       
-      # Update header - replace everything before first # heading
-      info "${repo}: updating header to v${achords_version}..."
-      
-      # Extract repo-specific content (after first # heading)
-      local repo_content
-      repo_content=$(awk '/^# /{found=1} found' AGENTS.md)
-      
-      # Generate new header
-      cat > AGENTS.md << EOF
+      if [ "$full_regenerate" = "full" ]; then
+        info "${repo}: regenerating full AGENTS.md to v${achords_version}..."
+        
+        # Extract custom repo rules (preserve content below ## Repository-Specific Rules)
+        local custom_rules=""
+        if grep -q "^## Repository-Specific Rules" AGENTS.md; then
+          custom_rules=$(awk '/^## Repository-Specific Rules/{found=1} found' AGENTS.md)
+        fi
+        
+        # Generate full body template
+        cat > AGENTS.md << EOF
+<!-- achords:header:v${achords_version} -->
+<!-- achords:tags: { "product": "obase", "domain": "coordination", "type": "reference", "status": "stable", "audience": "agent" } -->
+<!-- achords:resources -->
+| Resource | Path | Purpose |
+|----------|------|---------|
+| Org Rules | \`.achords/AGENTS.md\` | Organization-wide agent rules |
+| Org Memory | \`.achords/.engram/\` | Shared knowledge (git-synced) |
+| Conventions | \`.achords/config/conventions.json\` | Code conventions |
+| Policies | \`.achords/config/policies.json\` | Org policies |
+| Skills Rules | \`.skills/AGENTS.md\` | How to create/maintain skills |
+| Skills | \`.skills/skills/\` | Shared skills (Agent Skills spec) |
+| Onboarding | \`.internal/onboarding/\` | Setup scripts and docs |
+| Repo Memory | \`.engram/\` | Isolated repo memory |
+| Repo Config | \`.engram/config.json\` | project_name setting |
+<!-- achords:end -->
+
+# ${repo}
+
+> Agent configuration for this repository.
+
+## Reading Order
+
+1. \`.achords/AGENTS.md\` — Org rules (main entry point)
+2. \`.skills/AGENTS.md\` — Skills rules
+3. \`.engram/config.json\` — Repo project name
+4. This file — Repo-specific rules
+
+## Organization Rules
+
+Read \`.achords/AGENTS.md\` for organization-wide agent rules.
+
+## Repository-Specific Rules
+
+Add your repo-specific rules here.
+EOF
+        
+        # Append preserved custom rules if found
+        if [ -n "$custom_rules" ]; then
+          sed -i '/Add your repo-specific rules here/d' AGENTS.md
+          echo "" >> AGENTS.md
+          echo "$custom_rules" >> AGENTS.md
+        fi
+        
+        upgraded=$((upgraded + 1))
+        ok "${repo}: regenerated to v${achords_version}"
+      else
+        # Update header - replace everything before first # heading
+        info "${repo}: updating header to v${achords_version}..."
+        
+        # Extract repo-specific content (after first # heading)
+        local repo_content
+        repo_content=$(awk '/^# /{found=1} found' AGENTS.md)
+        
+        # Generate new header
+        cat > AGENTS.md << EOF
 <!-- achords:header:v${achords_version} -->
 <!-- achords:tags: { "product": "obase", "domain": "coordination", "type": "reference", "status": "stable", "audience": "agent" } -->
 <!-- achords:resources -->
@@ -1263,9 +1338,10 @@ update_all_agents_headers() {
 
 ${repo_content}
 EOF
-      
-      updated=$((updated + 1))
-      ok "${repo}: header updated to v${achords_version}"
+        
+        updated=$((updated + 1))
+        ok "${repo}: header updated to v${achords_version}"
+      fi
     else
       # Create new AGENTS.md with minimal header
       info "${repo}: creating AGENTS.md..."
@@ -1355,16 +1431,193 @@ EOF
   done
   
   echo ""
-  # Summary (updated to show push hint if not auto-pushed)
+  # Summary
   header "Summary"
   echo "  • Repos scanned: ${count}"
-  echo "  • Headers updated: ${updated}"
+  if [ "$full_regenerate" = "full" ]; then
+    echo "  • Fully regenerated: ${upgraded}"
+  else
+    echo "  • Headers updated: ${updated}"
+  fi
   echo "  • Headers created: ${created}"
   echo ""
   if [ "$AUTO_PUSH" = false ] && [ "$count" -gt 0 ]; then
-    echo "  To commit and push changes in each repo:"
-    echo "    achords obase --org ${ORG_NAME} --update-headers --push"
+    if [ "$full_regenerate" = "full" ]; then
+      echo "  To push: achords obase --org ${ORG_NAME} --upgrade --push"
+    else
+      echo "  To commit and push changes in each repo:"
+      echo "    achords obase --org ${ORG_NAME} --update-headers --push"
+    fi
     echo ""
+  fi
+}
+
+# ── upgrade guides to current achords version ──────────────────────
+upgrade_guides() {
+  local achords_version
+  achords_version=$(get_version)
+
+  # Read current guide version from .achords/version.json
+  local guide_version=""
+  local version_file="${WORK_DIR}/.achords/version.json"
+  if [ -f "$version_file" ]; then
+    guide_version=$(grep '"achords_version"' "$version_file" | sed 's/.*"achords_version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' 2>/dev/null || echo "")
+  fi
+
+  header "Upgrading achords guides"
+
+  if [ "$guide_version" = "$achords_version" ]; then
+    ok "Guides already at v${achords_version}"
+    return 0
+  fi
+
+  info "Upgrading guides from v${guide_version:-none} to v${achords_version}..."
+  
+  # ── Step 1: Upgrade .achords/ repo ──
+  local achords_dir="${WORK_DIR}/.achords"
+  if [ -d "$achords_dir/.git" ]; then
+    (
+      cd "$achords_dir"
+      
+      local now
+      now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+      
+      # Regenerate version.json with new achords_version
+      cat > version.json << EOF
+{
+  "version": "1.0.0",
+  "schema_version": "1.0.0",
+  "created_at": "${now}",
+  "updated_at": "${now}",
+  "description": "Achords organization configuration",
+  "owner": "${ORG_NAME}",
+  "achords_version": "${achords_version}",
+  "components": {
+    "engram": "1.0.0",
+    "agents": "1.0.0",
+    "skills": "1.0.0",
+    "config": "1.0.0"
+  }
+}
+EOF
+      
+      # Regenerate .achords/AGENTS.md from current template
+      cat > AGENTS.md << EOF
+<!-- achords:header:v${achords_version} -->
+<!-- achords:tags: { "product": "obase", "domain": "coordination", "type": "reference", "status": "stable", "audience": "agent" } -->
+<!-- achords:resources -->
+| Resource | Path | Purpose |
+|----------|------|---------|
+| Org Rules | \`.achords/AGENTS.md\` | Organization-wide agent rules |
+| Org Memory | \`.achords/.engram/\` | Shared knowledge (git-synced) |
+| Conventions | \`.achords/config/conventions.json\` | Code conventions |
+| Policies | \`.achords/config/policies.json\` | Org policies |
+| Skills | \`.skills/skills/\` | Shared skills (Agent Skills spec) |
+| Onboarding | \`.internal/onboarding/\` | Setup scripts and docs |
+<!-- achords:end -->
+
+# .achords — Agent Orchestration Rules
+
+> This file defines how AI agents work within this organization.
+> Each repo's AGENTS.md should reference this file.
+
+## Reading Order
+
+1. \`.achords/AGENTS.md\` — This file (org-wide rules)
+2. \`.achords/config/conventions.json\` — Code conventions
+3. \`.achords/config/policies.json\` — Org policies
+4. \`repo/.engram/config.json\` — Repo context
+5. \`repo/AGENTS.md\` — Repo-specific rules
+
+## Memory Protocol
+
+### At Session Start
+
+\`\`\`bash
+git submodule update --remote .achords
+mem_search(project: "${ORG_NAME}", query: "conventions", limit: 5)
+\`\`\`
+
+### During Work
+
+\`\`\`bash
+mem_save(project: "${ORG_NAME}", title: "Decision: ...", type: "decision", topic_key: "decisions/architecture")
+\`\`\`
+
+### At Session End
+
+\`\`\`bash
+mem_session_summary(content: "## Goal\\n...## Accomplished\\n...")
+\`\`\`
+
+## Skills
+
+Skills follow the Agent Skills specification:
+\`\`\`bash
+cat .skills/skills/testing/SKILL.md
+\`\`\`
+
+## Modification Rules
+
+- **Don't modify** \`.achords/\` directly
+- **Do modify** current repo files
+- **Do create** shared skills in \`.skills/skills/\`
+
+## Versioning
+
+When achords releases a new version:
+1. Run \`achords obase --org ${ORG_NAME} --upgrade\`
+2. This regenerates guides from the latest templates
+3. Custom repo rules below \`## Repository-Specific Rules\` are preserved
+EOF
+      
+      # Regenerate policies with latest template
+      cat > config/policies.json << 'EOF'
+{
+  "version": "1.0.0",
+  "access": {
+    "who_can_create_repos": ["admin", "member"],
+    "who_can_invite": ["admin"],
+    "default_repo_permission": "read"
+  },
+  "agents": {
+    "allowed_models": ["gpt-4", "claude-3-opus"],
+    "require_review": true,
+    "max_changes_per_pr": 500
+  },
+  "memory": {
+    "org_level": "ORG_NAME",
+    "sync_enabled": true,
+    "retention_days": 365
+  }
+}
+EOF
+      sed -i "s/\"ORG_NAME\"/\"${ORG_NAME}\"/g" config/policies.json
+      
+      if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+        git add -A 2>/dev/null || true
+        git commit -m "upgrade: achords guides to v${achords_version}" --quiet 2>/dev/null || true
+        ok ".achords guides upgraded"
+      fi
+      
+      if [ "$AUTO_PUSH" = true ]; then
+        git push --quiet 2>/dev/null || warn ".achords push failed"
+      fi
+    )
+  else
+    warn ".achords repo not found at ${achords_dir} — skipping"
+  fi
+
+  # ── Step 2: Upgrade all existing repos ──
+  update_all_agents_headers "full"
+  
+  # ── Step 3: Summary ──
+  echo ""
+  header "Upgrade complete"
+  echo "  • Version: v${guide_version:-none} → v${achords_version}"
+  echo ""
+  if [ "$AUTO_PUSH" = false ]; then
+    echo "  To push: achords obase --org ${ORG_NAME} --upgrade --push"
   fi
 }
 
@@ -1463,6 +1716,23 @@ main() {
     check_deps
     check_auth
     update_all_agents_headers
+    return
+  fi
+  
+  # Handle --upgrade mode
+  if [ "$UPGRADE_GUIDES" = true ]; then
+    load_env
+    
+    if [ -z "$ORG_NAME" ]; then
+      err "No organization name found."
+      echo "  Run: achords obase --org <name> --upgrade"
+      exit 1
+    fi
+    
+    check_deps
+    check_auth
+    check_org
+    upgrade_guides
     return
   fi
   
