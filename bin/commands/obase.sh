@@ -948,18 +948,31 @@ Skills are versioned in \`.skills/\` with manifest tracking:
 cat .skills/skills/testing/manifest.json
 
 # Load specific version
-cat .skills/skills/testing/versions/v1.1.0.md
+cat .skills/skills/testing/versions/v1.1.0/SKILL.md
 
-# Load latest (symlink)
+# Load latest
 cat .skills/skills/testing/SKILL.md
+\`\`\`
+
+### Each Version is a Directory
+
+Versions are directories, not files:
+\`\`\`
+versions/
+├── v1.1.0/
+│   ├── SKILL.md        # Main instructions
+│   └── scripts/        # Helper scripts (optional)
+└── v1.1.0-windows/
+    ├── SKILL.md
+    └── scripts/
 \`\`\`
 
 ### Fork/Variants
 
 Skills can have platform-specific forks:
-- \`v1.1.0.md\` — Standard version
-- \`v1.1.0-windows.md\` — Windows fork
-- \`v1.1.0-arm.md\` — ARM fork
+- \`v1.1.0/\` — Standard version
+- \`v1.1.0-windows/\` — Windows fork
+- \`v1.1.0-arm/\` — ARM fork
 
 Check \`manifest.json\` for available versions and platforms.
 
