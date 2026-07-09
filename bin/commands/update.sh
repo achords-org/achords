@@ -13,16 +13,21 @@ set -euo pipefail
 
 # ── config ───────────────────────────────────────────────────────────
 ACHORDS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+NPM_PACKAGE="achords"
 
-# Read version from package.json (single source of truth)
-get_version() {
+# Get installed version (from package.json in dev, or npm in production)
+get_installed_version() {
   local pkg_json="${ACHORDS_DIR}/package.json"
   if [ -f "$pkg_json" ]; then
-    # Use grep + sed to extract version without jq dependency
     grep '"version"' "$pkg_json" | head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/'
   else
-    echo "unknown"
+    npm list -g achords --depth=0 2>/dev/null | grep achords | sed 's/.*@\([^ ]*\).*/\1/' || echo "unknown"
   fi
+}
+
+# Get latest version from npm registry
+get_latest_version() {
+  npm view "$NPM_PACKAGE" version 2>/dev/null || echo "unknown"
 }
 
 # ── branding ─────────────────────────────────────────────────────────
@@ -52,77 +57,98 @@ err()   { printf "${RED}✗${NC} %s\n" "$*" >&2; }
 
 # ── check if update is needed ────────────────────────────────────────
 check_update_needed() {
+  local installed_version
+  installed_version=$(get_installed_version)
+  
+  local latest_version
+  latest_version=$(get_latest_version)
+  
   info "Checking if update is needed..."
   
-  # Check if we're in a git repo
-  if [ ! -d "$ACHORDS_DIR/.git" ]; then
-    err "Not a git repository. Cannot update."
-    echo ""
-    echo "  If you installed achords via npm, update with:"
-    echo "    npm update -g achords"
-    echo ""
+  if [ "$latest_version" = "unknown" ]; then
+    # Package not yet published to npm - check git
+    if [ -d "$ACHORDS_DIR/.git" ]; then
+      cd "$ACHORDS_DIR"
+      if git fetch origin --quiet 2>/dev/null; then
+        local current_commit
+        current_commit=$(git rev-parse HEAD 2>/dev/null)
+        local latest_commit
+        latest_commit=$(git rev-parse origin/main 2>/dev/null)
+        
+        if [ "$current_commit" = "$latest_commit" ]; then
+          ok "achords is already up to date! (v${installed_version} - dev mode)"
+          echo ""
+          return 0
+        fi
+      fi
+    fi
+    
+    err "Package not found on npm. Check your internet connection."
     exit 1
   fi
   
-  cd "$ACHORDS_DIR"
-  
-  # Fetch latest from remote
-  if ! git fetch origin --quiet 2>/dev/null; then
-    err "Could not fetch from remote. Check your internet connection."
-    exit 1
-  fi
-  
-  # Get current commit
-  local current_commit
-  current_commit=$(git rev-parse HEAD 2>/dev/null)
-  
-  # Get latest commit on main
-  local latest_commit
-  latest_commit=$(git rev-parse origin/main 2>/dev/null)
-  
-  # Compare
-  if [ "$current_commit" = "$latest_commit" ]; then
-    ok "achords is already up to date!"
+  if [ "$installed_version" = "$latest_version" ]; then
+    ok "achords is already up to date! (v${installed_version})"
     echo ""
     return 0
   fi
+  
+  echo ""
+  echo "  Installed:  v${installed_version}"
+  echo "  Latest:     v${latest_version}"
+  echo ""
   
   return 1
 }
 
 # ── perform update ───────────────────────────────────────────────────
 perform_update() {
-  info "Updating achords..."
+  local latest_version
+  latest_version=$(get_latest_version)
   
-  cd "$ACHORDS_DIR"
+  info "Updating achords to v${latest_version}..."
   
-  # Stash any local changes
-  local stash_needed=false
-  if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
-    warn "Stashing local changes..."
-    git stash push -m "achords-update-$(date +%s)" --quiet
-    stash_needed=true
-  fi
-  
-  # Pull latest changes
-  if git pull origin main --quiet 2>/dev/null; then
-    ok "Update successful!"
-  else
-    err "Update failed. Check for conflicts."
+  # Check if installed globally or locally
+  if [ -d "$ACHORDS_DIR/.git" ]; then
+    # Development mode - git pull
+    cd "$ACHORDS_DIR"
+    
+    # Stash any local changes
+    local stash_needed=false
+    if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+      warn "Stashing local changes..."
+      git stash push -m "achords-update-$(date +%s)" --quiet
+      stash_needed=true
+    fi
+    
+    # Pull latest changes
+    if git pull origin main --quiet 2>/dev/null; then
+      ok "Update successful!"
+    else
+      err "Update failed. Check for conflicts."
+      
+      # Restore stash if needed
+      if [ "$stash_needed" = true ]; then
+        warn "Restoring stashed changes..."
+        git stash pop --quiet 2>/dev/null || true
+      fi
+      exit 1
+    fi
     
     # Restore stash if needed
     if [ "$stash_needed" = true ]; then
-      warn "Restoring stashed changes..."
-      git stash pop --quiet 2>/dev/null || true
+      info "Restoring stashed changes..."
+      if ! git stash pop --quiet 2>/dev/null; then
+        warn "Could not restore stashed changes. Check manually."
+      fi
     fi
-    exit 1
-  fi
-  
-  # Restore stash if needed
-  if [ "$stash_needed" = true ]; then
-    info "Restoring stashed changes..."
-    if ! git stash pop --quiet 2>/dev/null; then
-      warn "Could not restore stashed changes. Check manually."
+  else
+    # Production mode - npm update
+    if npm update -g achords 2>/dev/null; then
+      ok "Update successful!"
+    else
+      err "Update failed. Try running: npm install -g achords"
+      exit 1
     fi
   fi
 }

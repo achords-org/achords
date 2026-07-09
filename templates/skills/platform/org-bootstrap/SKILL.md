@@ -4,7 +4,7 @@ description: Initialize a GitHub organization for multi-agent collaboration. Cre
 license: MIT
 compatibility: Requires GitHub CLI (gh) authenticated with owner access to the target organization.
 metadata:
-  author: Achords
+  author: achords-org
   version: "1.0.0"
   category: platform
   skill_type: core
@@ -29,7 +29,7 @@ Bootstrap a GitHub organization with the repository structure required for Achor
    - `.github` (public) — Organization profile
    - `.internal` (private) — Team docs, onboarding, agent config
    - `.skills` (private) — Agent skills library
-3. Clones all repos locally to `~/Poincare/`
+3. Clones all repos locally to `~/achords-workspace/`
 4. Generates base files:
    - `.github/profile/README.md` — Organization description
    - `.internal/onboarding/README.md` — Team onboarding entry point
@@ -62,10 +62,10 @@ bash .achords/skills/platform/org-bootstrap/scripts/bootstrap.sh <org-name> [ski
 Examples:
 ```bash
 # Basic bootstrap
-bash .achords/skills/platform/org-bootstrap/scripts/bootstrap.sh Poincare-Space
+bash .achords/skills/platform/org-bootstrap/scripts/bootstrap.sh my-org
 
 # With team skills from external repo
-bash .achords/skills/platform/org-bootstrap/scripts/bootstrap.sh Poincare-Space https://github.com/myorg/team-skills.git
+bash .achords/skills/platform/org-bootstrap/scripts/bootstrap.sh my-org https://github.com/myorg/team-skills.git
 ```
 
 ### 3. Follow prompts
@@ -81,11 +81,11 @@ The script will:
 
 ```
 ✓ GitHub CLI authenticated
-✓ Organization: Poincare-Space
+✓ Organization: my-org
 ✓ Repository .github created (public)
 ✓ Repository .internal created (private)
 ✓ Repository .skills created (private)
-✓ All repos cloned to ~/Poincare/
+✓ All repos cloned to ~/achords-workspace/
 ✓ Base files generated
 ✓ Bootstrap complete
 ```
@@ -93,14 +93,14 @@ The script will:
 ### 5. Customize
 
 After bootstrap:
-- Edit `~/Poincare/.github/profile/README.md` with org description
-- Edit `~/Poincare/.internal/onboarding/AGENTS.md` with team protocols
-- Add skills to `~/Poincare/.skills/`
+- Edit `~/achords-workspace/.github/profile/README.md` with org description
+- Edit `~/achords-workspace/.internal/onboarding/AGENTS.md` with team protocols
+- Add skills to `~/achords-workspace/.skills/`
 
 ## Files created
 
 ```
-~/Poincare/
+~/achords-workspace/
 ├── .github/
 │   └── profile/
 │       └── README.md

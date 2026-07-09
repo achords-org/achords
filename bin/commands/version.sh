@@ -13,17 +13,22 @@ set -euo pipefail
 
 # ── config ───────────────────────────────────────────────────────────
 ACHORDS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-REPO_URL="https://github.com/cxto21/achords.git"
+NPM_PACKAGE="achords"
 
-# Read version from package.json (single source of truth)
-get_version() {
+# Get installed version (from package.json in dev, or npm in production)
+get_installed_version() {
   local pkg_json="${ACHORDS_DIR}/package.json"
   if [ -f "$pkg_json" ]; then
-    # Use grep + sed to extract version without jq dependency
     grep '"version"' "$pkg_json" | head -1 | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/'
   else
-    echo "unknown"
+    # Fallback: try npm list
+    npm list -g achords --depth=0 2>/dev/null | grep achords | sed 's/.*@\([^ ]*\).*/\1/' || echo "unknown"
   fi
+}
+
+# Get latest version from npm registry
+get_latest_version() {
+  npm view "$NPM_PACKAGE" version 2>/dev/null || echo "unknown"
 }
 
 # ── branding ─────────────────────────────────────────────────────────
@@ -53,39 +58,54 @@ err()   { printf "${RED}✗${NC} %s\n" "$*" >&2; }
 
 # ── check for updates ────────────────────────────────────────────────
 check_updates() {
+  local installed_version
+  installed_version=$(get_installed_version)
+  
+  local latest_version
+  latest_version=$(get_latest_version)
+  
   info "Checking for updates..."
   
-  # Check if we're in a git repo
-  if [ ! -d "$ACHORDS_DIR/.git" ]; then
-    warn "Not a git repository. Cannot check for updates."
-    return 1
+  if [ "$latest_version" = "unknown" ]; then
+    # Package not yet published to npm
+    if [ -d "$ACHORDS_DIR/.git" ]; then
+      # Check git remote instead
+      cd "$ACHORDS_DIR"
+      if git fetch origin --quiet 2>/dev/null; then
+        local current_commit
+        current_commit=$(git rev-parse HEAD 2>/dev/null)
+        local latest_commit
+        latest_commit=$(git rev-parse origin/main 2>/dev/null)
+        
+        if [ "$current_commit" = "$latest_commit" ]; then
+          ok "achords is up to date! (v${installed_version} - dev mode)"
+          return 0
+        else
+          warn "New changes available on remote!"
+          echo ""
+          echo "  Current:  ${current_commit:0:8}"
+          echo "  Latest:   ${latest_commit:0:8}"
+          echo ""
+          return 1
+        fi
+      else
+        warn "Could not check npm registry or git remote."
+        return 1
+      fi
+    else
+      warn "Package not found on npm. Check your internet connection."
+      return 1
+    fi
   fi
   
-  cd "$ACHORDS_DIR"
-  
-  # Fetch latest from remote
-  if ! git fetch origin --quiet 2>/dev/null; then
-    warn "Could not fetch from remote. Check your internet connection."
-    return 1
-  fi
-  
-  # Get current commit
-  local current_commit
-  current_commit=$(git rev-parse HEAD 2>/dev/null)
-  
-  # Get latest commit on main
-  local latest_commit
-  latest_commit=$(git rev-parse origin/main 2>/dev/null)
-  
-  # Compare
-  if [ "$current_commit" = "$latest_commit" ]; then
-    ok "achords is up to date!"
+  if [ "$installed_version" = "$latest_version" ]; then
+    ok "achords is up to date! (v${installed_version})"
     return 0
   else
     warn "New version available!"
     echo ""
-    echo "  Current:  ${current_commit:0:8}"
-    echo "  Latest:   ${latest_commit:0:8}"
+    echo "  Installed:  v${installed_version}"
+    echo "  Latest:     v${latest_version}"
     echo ""
     return 1
   fi
@@ -94,11 +114,11 @@ check_updates() {
 # ── show version info ────────────────────────────────────────────────
 show_version() {
   local version
-  version=$(get_version)
+  version=$(get_installed_version)
   
   echo "$BANNER"
   echo ""
-  printf "  ${BOLD}Version:${NC} %s\n" "$version"
+  printf "  ${BOLD}Installed:${NC} v%s\n" "$version"
   echo ""
   
   # Get git info if available

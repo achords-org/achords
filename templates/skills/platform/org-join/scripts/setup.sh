@@ -6,19 +6,19 @@
 #   bash setup.sh <org-name>
 #
 # Example:
-#   bash setup.sh Poincare-Space
+#   bash setup.sh my-org
 
 set -euo pipefail
 
 if [ $# -lt 1 ]; then
   echo "Usage: bash setup.sh <org-name>"
-  echo "Example: bash setup.sh Poincare-Space"
+  echo "Example: bash setup.sh my-org"
   exit 1
 fi
 
 ORG="$1"
 REPOS=(".github" ".internal" ".skills")
-POINCARE_DIR="${HOME}/Poincare"
+WORK_DIR="${HOME}/achords-workspace"
 
 echo "Achords — Organization Join"
 echo "==========================="
@@ -52,13 +52,13 @@ echo "Dependencies OK"
 echo ""
 
 # Create base directory
-mkdir -p "$POINCARE_DIR"
+mkdir -p "$WORK_DIR"
 
 # Clone repos
 echo "Cloning repositories..."
 for repo in "${REPOS[@]}"; do
   FULL_NAME="${ORG}/${repo}"
-  TARGET="${POINCARE_DIR}/${repo}"
+  TARGET="${WORK_DIR}/${repo}"
 
   if [ -d "$TARGET" ]; then
     echo "  skip ${repo} (exists locally)"
@@ -71,13 +71,13 @@ for repo in "${REPOS[@]}"; do
 done
 
 echo ""
-echo "All repos cloned to ${POINCARE_DIR}/"
+echo "All repos cloned to ${WORK_DIR}/"
 echo ""
 
 # Summary
 echo "Structure:"
 for repo in "${REPOS[@]}"; do
-  if [ -d "${POINCARE_DIR}/${repo}" ]; then
+  if [ -d "${WORK_DIR}/${repo}" ]; then
     echo "  ${repo}/"
   else
     echo "  ${repo}/ (not available)"
@@ -88,6 +88,6 @@ echo ""
 echo "Setup complete!"
 echo ""
 echo "Next steps:"
-echo "  1. Read ${POINCARE_DIR}/.internal/onboarding/README.md"
-echo "  2. Read ${POINCARE_DIR}/.internal/onboarding/AGENTS.md"
+echo "  1. Read ${WORK_DIR}/.internal/onboarding/README.md"
+echo "  2. Read ${WORK_DIR}/.internal/onboarding/AGENTS.md"
 echo "  3. Start contributing"

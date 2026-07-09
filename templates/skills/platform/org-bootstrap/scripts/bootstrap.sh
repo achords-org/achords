@@ -6,8 +6,8 @@
 #   bash bootstrap.sh <org-name> [skills-repo-url]
 #
 # Examples:
-#   bash bootstrap.sh Poincare-Space
-#   bash bootstrap.sh Poincare-Space https://github.com/myorg/team-skills.git
+#   bash bootstrap.sh my-org
+#   bash bootstrap.sh my-org https://github.com/myorg/team-skills.git
 
 set -euo pipefail
 
@@ -29,14 +29,14 @@ if [ $# -lt 1 ]; then
   echo "Usage: bash bootstrap.sh <org-name> [skills-repo-url]"
   echo ""
   echo "Examples:"
-  echo "  bash bootstrap.sh Poincare-Space"
-  echo "  bash bootstrap.sh Poincare-Space https://github.com/myorg/team-skills.git"
+  echo "  bash bootstrap.sh my-org"
+  echo "  bash bootstrap.sh my-org https://github.com/myorg/team-skills.git"
   exit 1
 fi
 
 ORG="$1"
 SKILLS_URL="${2:-}"
-POINCARE_DIR="${HOME}/Poincare"
+WORK_DIR="${HOME}/achords-workspace"
 
 echo "Achords — Organization Bootstrap"
 echo "================================"
@@ -89,7 +89,7 @@ info "Checking local state..."
 CONFLICTS=0
 
 # Check .internal
-INTERNAL_DIR="${POINCARE_DIR}/.internal"
+INTERNAL_DIR="${WORK_DIR}/.internal"
 if [ -d "$INTERNAL_DIR" ]; then
   CONTENT_COUNT=$(find "$INTERNAL_DIR" -mindepth 1 -not -path '*/\.git/*' -not -path '*/\.git' 2>/dev/null | wc -l)
   if [ "$CONTENT_COUNT" -gt 0 ]; then
@@ -101,7 +101,7 @@ if [ -d "$INTERNAL_DIR" ]; then
 fi
 
 # Check .skills
-SKILLS_DIR="${POINCARE_DIR}/.skills"
+SKILLS_DIR="${WORK_DIR}/.skills"
 if [ -d "$SKILLS_DIR" ]; then
   CONTENT_COUNT=$(find "$SKILLS_DIR" -mindepth 1 -not -path '*/\.git/*' -not -path '*/\.git' 2>/dev/null | wc -l)
   if [ "$CONTENT_COUNT" -gt 0 ]; then
@@ -156,7 +156,7 @@ echo ""
 info "Cloning repositories..."
 
 for repo in .github .internal .skills; do
-  TARGET="${POINCARE_DIR}/${repo}"
+  TARGET="${WORK_DIR}/${repo}"
   if [ -d "$TARGET" ]; then
     ok "${repo} exists locally"
   else
@@ -171,7 +171,7 @@ echo ""
 info "Generating base files..."
 
 # .github profile README
-PROFILE_DIR="${POINCARE_DIR}/.github/profile"
+PROFILE_DIR="${WORK_DIR}/.github/profile"
 mkdir -p "$PROFILE_DIR"
 echo "# ${ORG}" > "${PROFILE_DIR}/README.md"
 echo "" >> "${PROFILE_DIR}/README.md"
@@ -179,7 +179,7 @@ echo "> Multi-agent development organization." >> "${PROFILE_DIR}/README.md"
 ok "Profile README"
 
 # .internal onboarding
-ONBOARDING_DIR="${POINCARE_DIR}/.internal/onboarding"
+ONBOARDING_DIR="${WORK_DIR}/.internal/onboarding"
 mkdir -p "${ONBOARDING_DIR}/scripts"
 mkdir -p "${ONBOARDING_DIR}/skills/join-team"
 
@@ -199,13 +199,13 @@ if [ -n "$SKILLS_URL" ]; then
   TEMP_DIR=$(mktemp -d)
   if git clone "$SKILLS_URL" "$TEMP_DIR" --quiet 2>/dev/null; then
     # Move contents to .skills (including .git)
-    rm -rf "${POINCARE_DIR}/.skills"
-    mv "$TEMP_DIR" "${POINCARE_DIR}/.skills"
+    rm -rf "${WORK_DIR}/.skills"
+    mv "$TEMP_DIR" "${WORK_DIR}/.skills"
     ok "Skills imported"
   else
     warn "Could not clone skills repo"
     echo "  You can add it later:"
-    echo "    cd ${POINCARE_DIR}/.skills && git remote add origin ${SKILLS_URL} && git pull origin main"
+    echo "    cd ${WORK_DIR}/.skills && git remote add origin ${SKILLS_URL} && git pull origin main"
   fi
   rm -rf "$TEMP_DIR"
 fi
@@ -215,16 +215,16 @@ echo ""
 ok "Bootstrap complete!"
 echo ""
 echo "Structure:"
-echo "  ~/Poincare/"
+echo "  ~/achords-workspace/"
 echo "  ├── .github/"
 echo "  ├── .internal/"
 echo "  └── .skills/"
 echo ""
 echo "Next steps:"
-echo "  1. Edit ~/Poincare/.github/profile/README.md"
-echo "  2. Edit ~/Poincare/.internal/onboarding/AGENTS.md"
+echo "  1. Edit ~/achords-workspace/.github/profile/README.md"
+echo "  2. Edit ~/achords-workspace/.internal/onboarding/AGENTS.md"
 if [ -n "$SKILLS_URL" ]; then
   echo "  3. Skills loaded from ${SKILLS_URL}"
 else
-  echo "  3. Add skills to ~/Poincare/.skills/"
+  echo "  3. Add skills to ~/achords-workspace/.skills/"
 fi

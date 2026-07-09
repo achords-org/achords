@@ -27,7 +27,7 @@ if [ -f ".env" ]; then
 fi
 
 # Use env var or default
-ENGRAM_REPO="${ENGRAAM_REPO_URL:-https://github.com/Poincare-Space/.engram.git}"
+ENGRAM_REPO="${ENGRAAM_REPO_URL:-https://github.com/achords-org/.engram.git}"
 
 info "Using .engram repo: ${ENGRAM_REPO}"
 echo ""

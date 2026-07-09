@@ -4,7 +4,7 @@ description: Join an existing GitHub organization for multi-agent collaboration.
 license: MIT
 compatibility: Requires GitHub CLI (gh) authenticated with read access to the target organization.
 metadata:
-  author: Achords
+  author: achords-org
   version: "1.0.0"
   category: platform
   skill_type: core
@@ -26,7 +26,7 @@ Set up a new team member's local environment by cloning the organization's core 
 
 1. Validates GitHub CLI authentication
 2. Detects or accepts organization name
-3. Clones core repositories to `~/Poincare/`:
+3. Clones core repositories to `~/achords-workspace/`:
    - `.github` — Organization profile
    - `.internal` — Team docs, onboarding, agent config
    - `.skills` — Agent skills library
@@ -55,19 +55,19 @@ bash .achords/skills/platform/org-join/scripts/setup.sh <org-name>
 
 Example:
 ```bash
-bash .achords/skills/platform/org-join/scripts/setup.sh Poincare-Space
+bash .achords/skills/platform/org-join/scripts/setup.sh my-org
 ```
 
 ### 3. Verify output
 
 ```
 Dependencies OK
-Organization: Poincare-Space
+Organization: my-org
 Cloning repositories...
   clone .github...
   clone .internal...
   clone .skills...
-All repos cloned to ~/Poincare/
+All repos cloned to ~/achords-workspace/
 Setup complete
 ```
 
@@ -75,14 +75,14 @@ Setup complete
 
 After setup:
 ```bash
-cat ~/Poincare/.internal/onboarding/README.md
-cat ~/Poincare/.internal/onboarding/AGENTS.md
+cat ~/achords-workspace/.internal/onboarding/README.md
+cat ~/achords-workspace/.internal/onboarding/AGENTS.md
 ```
 
 ## Files created
 
 ```
-~/Poincare/
+~/achords-workspace/
 ├── .github/          # Organization profile
 ├── .internal/        # Team docs and onboarding
 │   └── onboarding/
@@ -101,7 +101,7 @@ cat ~/Poincare/.internal/onboarding/AGENTS.md
 For AI agents, point the agent to:
 
 ```
-~/Poincare/.internal/onboarding/skills/join-team/SKILL.md
+~/achords-workspace/.internal/onboarding/skills/join-team/SKILL.md
 ```
 
 The agent will:

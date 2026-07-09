@@ -12,7 +12,7 @@
 # Options:
 #   --org <name>      Organization name
 #   --skills <url>    Skills repository URL
-#   --dir <path>      Work directory (default: ~/Poincare)
+#   --dir <path>      Work directory (default: ~/achords-workspace)
 #   --help, -h        Show this help
 #
 # ══════════════════════════════════════════════════════════════════════
