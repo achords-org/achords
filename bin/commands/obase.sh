@@ -68,6 +68,7 @@ show_help() {
   echo "    --dir <path>          Work directory (default: ~/achords-workspace)"
   echo "    --repo <name>         Setup existing repo for agent memory"
   echo "    --update-profile      Update repos table in profile README only"
+  echo "    --update-headers      Update AGENTS.md headers in all repos"
   echo "    --push                Commit and push changes after update"
   echo "    --help, -h            Show this help"
   echo ""
@@ -87,6 +88,7 @@ parse_args() {
   SKILLS_URL=""
   WORK_DIR="${HOME}/achords-workspace"
   UPDATE_PROFILE=false
+  UPDATE_HEADERS=false
   AUTO_PUSH=false
   REPO_NAME=""
   
@@ -110,6 +112,10 @@ parse_args() {
         ;;
       --update-profile)
         UPDATE_PROFILE=true
+        shift
+        ;;
+      --update-headers)
+        UPDATE_HEADERS=true
         shift
         ;;
       --push)
@@ -1088,6 +1094,165 @@ summary() {
   echo ""
 }
 
+# ── update AGENTS.md headers in all repos ──────────────────────────
+update_all_agents_headers() {
+  header "Updating AGENTS.md headers in all repositories"
+  
+  local achords_version
+  achords_version=$(get_version)
+  
+  # Get all repos in the org
+  local repos
+  repos=$(gh repo list "$ORG_NAME" --json name --jq '.[].name' 2>/dev/null)
+  
+  if [ -z "$repos" ]; then
+    warn "No repositories found in ${ORG_NAME}"
+    return 0
+  fi
+  
+  local count=0
+  local updated=0
+  local created=0
+  
+  for repo in $repos; do
+    # Skip special repos
+    if [[ "$repo" == ".github" || "$repo" == ".achords" || "$repo" == ".skills" || "$repo" == ".internal" ]]; then
+      continue
+    fi
+    
+    count=$((count + 1))
+    local repo_dir="${WORK_DIR}/${repo}"
+    
+    # Clone if not exists
+    if [ ! -d "$repo_dir" ]; then
+      info "Cloning ${repo}..."
+      git clone "https://github.com/${ORG_NAME}/${repo}.git" "$repo_dir" --quiet 2>/dev/null || {
+        warn "Could not clone ${repo}, skipping"
+        continue
+      }
+    fi
+    
+    cd "$repo_dir"
+    
+    # Check if AGENTS.md exists
+    if [ -f "AGENTS.md" ]; then
+      # Check if header exists and version matches
+      if grep -q "<!-- achords:header:v${achords_version} -->" AGENTS.md; then
+        ok "${repo}: header up to date (v${achords_version})"
+        continue
+      fi
+      
+      # Update header - replace everything before first # heading
+      info "${repo}: updating header to v${achords_version}..."
+      
+      # Extract repo-specific content (after first # heading)
+      local repo_content
+      repo_content=$(awk '/^# /{found=1} found' AGENTS.md)
+      
+      # Generate new header
+      cat > AGENTS.md << EOF
+<!-- achords:header:v${achords_version} -->
+<!-- achords:resources -->
+| Resource | Path | Purpose |
+|----------|------|---------|
+| Org Rules | \`.achords/AGENTS.md\` | Organization-wide agent rules |
+| Org Memory | \`.achords/.engram/\` | Shared knowledge (git-synced) |
+| Conventions | \`.achords/config/conventions.json\` | Code conventions |
+| Policies | \`.achords/config/policies.json\` | Org policies |
+| Skills Rules | \`.skills/AGENTS.md\` | How to create/maintain skills |
+| Skills | \`.skills/skills/\` | Shared skills (Agent Skills spec) |
+| Onboarding | \`.internal/onboarding/\` | Setup scripts and docs |
+| Repo Memory | \`.engram/\` | Isolated repo memory |
+| Repo Config | \`.engram/config.json\` | project_name setting |
+<!-- achords:end -->
+
+${repo_content}
+EOF
+      
+      updated=$((updated + 1))
+      ok "${repo}: header updated to v${achords_version}"
+    else
+      # Create new AGENTS.md with minimal header
+      info "${repo}: creating AGENTS.md..."
+      
+      cat > AGENTS.md << EOF
+<!-- achords:header:v${achords_version} -->
+<!-- achords:resources -->
+| Resource | Path | Purpose |
+|----------|------|---------|
+| Org Rules | \`.achords/AGENTS.md\` | Organization-wide agent rules |
+| Org Memory | \`.achords/.engram/\` | Shared knowledge (git-synced) |
+| Conventions | \`.achords/config/conventions.json\` | Code conventions |
+| Policies | \`.achords/config/policies.json\` | Org policies |
+| Skills Rules | \`.skills/AGENTS.md\` | How to create/maintain skills |
+| Skills | \`.skills/skills/\` | Shared skills (Agent Skills spec) |
+| Onboarding | \`.internal/onboarding/\` | Setup scripts and docs |
+| Repo Memory | \`.engram/\` | Isolated repo memory |
+| Repo Config | \`.engram/config.json\` | project_name setting |
+<!-- achords:end -->
+
+# ${repo}
+
+> Agent configuration for this repository.
+
+## Reading Order
+
+1. \`.achords/AGENTS.md\` — Org rules (main entry point)
+2. \`.skills/AGENTS.md\` — Skills rules
+3. \`.engram/config.json\` — Repo project name
+4. This file — Repo-specific rules
+
+## Organization Rules
+
+Read \`.achords/AGENTS.md\` for organization-wide agent rules.
+
+## Repository-Specific Rules
+
+Add your repo-specific rules here.
+EOF
+      
+      created=$((created + 1))
+      ok "${repo}: AGENTS.md created"
+    fi
+    
+    # Add .achords submodule if not present
+    if [ ! -d ".achords" ]; then
+      info "${repo}: adding .achords submodule..."
+      git submodule add "https://github.com/${ORG_NAME}/.achords.git" .achords 2>/dev/null || true
+    fi
+    
+    # Add .skills submodule if not present
+    if [ ! -d ".skills" ]; then
+      info "${repo}: adding .skills submodule..."
+      git submodule add "https://github.com/${ORG_NAME}/.skills.git" .skills 2>/dev/null || true
+    fi
+    
+    # Create .engram if not present
+    if [ ! -d ".engram" ]; then
+      mkdir -p .engram
+      cat > .engram/config.json << EOF
+{
+  "project_name": "${repo}",
+  "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "achords_version": "${achords_version}"
+}
+EOF
+    fi
+    
+    cd "$WORK_DIR"
+  done
+  
+  echo ""
+  header "Summary"
+  echo "  • Repos scanned: ${count}"
+  echo "  • Headers updated: ${updated}"
+  echo "  • Headers created: ${created}"
+  echo ""
+  echo "  To commit changes in each repo:"
+  echo "    cd <repo> && git add . && git commit -m 'chore: update achords headers'"
+  echo ""
+}
+
 # ── main ─────────────────────────────────────────────────────────────
 main() {
   parse_args "$@"
@@ -1151,6 +1316,22 @@ main() {
     return
   fi
   
+  # Handle --update-headers mode
+  if [ "$UPDATE_HEADERS" = true ]; then
+    load_env
+    
+    if [ -z "$ORG_NAME" ]; then
+      err "No organization name found."
+      echo "  Run: achords obase --org <name> --update-headers"
+      exit 1
+    fi
+    
+    check_deps
+    check_auth
+    update_all_agents_headers
+    return
+  fi
+  
   # Full setup mode
   # Setup .env
   setup_env
@@ -1165,6 +1346,7 @@ main() {
   init_achords_repo
   generate_files
   import_skills
+  update_all_agents_headers
   summary
 }
 
