@@ -16,30 +16,30 @@ configuration:
     fontOrigin: googleFonts
     cdnCaching: true
     typography:
-      header: Schibsted Grotesk
-      body: Source Sans Pro
-      code: IBM Plex Mono
+      header: Geist
+      body: Geist
+      code: Geist Mono
     colors:
       lightMode:
-        light: "#faf8f8"
+        light: "#ffffff"
         lightgray: "#e5e5e5"
-        gray: "#b8b8b8"
-        darkgray: "#4e4e4e"
-        dark: "#2b2b2b"
-        secondary: "#284b63"
-        tertiary: "#84a59d"
-        highlight: rgba(143, 159, 169, 0.15)
-        textHighlight: "#fff23688"
+        gray: "#a1a1aa"
+        darkgray: "#52525b"
+        dark: "#18181b"
+        secondary: "#06b6d4"
+        tertiary: "#a855f7"
+        highlight: "rgba(6, 182, 212, 0.1)"
+        textHighlight: "#67e8f988"
       darkMode:
-        light: "#161618"
-        lightgray: "#393639"
-        gray: "#646464"
-        darkgray: "#d4d4d4"
-        dark: "#ebebec"
-        secondary: "#7b97aa"
-        tertiary: "#84a59d"
-        highlight: rgba(143, 159, 169, 0.15)
-        textHighlight: "#b3aa0288"
+        light: "#000000"
+        lightgray: "#27272a"
+        gray: "#52525b"
+        darkgray: "#a1a1aa"
+        dark: "#fafafa"
+        secondary: "#06b6d4"
+        tertiary: "#a855f7"
+        highlight: "rgba(6, 182, 212, 0.1)"
+        textHighlight: "#67e8f988"
 plugins:
   - source: github:quartz-community/created-modified-date
     enabled: true
@@ -198,6 +198,7 @@ plugins:
     enabled: true
     options:
       links:
+        Home: https://achords.pages.dev
         GitHub: https://github.com/achords-org/achords
         npm: https://www.npmjs.com/package/achords
   - source: github:quartz-community/recent-notes
