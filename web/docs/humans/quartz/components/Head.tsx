@@ -96,6 +96,8 @@ export default (() => {
         <meta name="generator" content="Quartz" />
 
         {css.map((resource) => CSSResourceToStyleElement(resource, true))}
+        {/* Custom Achords CSS */}
+        <link rel="stylesheet" href={joinSegments(baseDir, "static/custom.css")} />
         {js
           .filter((resource) => resource.loadTime === "beforeDOMReady")
           .map((res) => JSResourceToScriptElement(res, true))}

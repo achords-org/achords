@@ -11,9 +11,11 @@ const PageTitle: QuartzComponent = ({ fileData, cfg, displayClass }: QuartzCompo
   const locale = cfg?.locale ?? "en-US";
   const title = cfg?.pageTitle ?? i18n(locale).propertyDefaults.title;
   const baseDir = pathToRoot(fileData.slug as string);
+  // Link to landing page from sidebar title
+  const homepageUrl = "https://achords.pages.dev";
   return (
     <h2 class={classNames(displayClass, "page-title")}>
-      <a href={baseDir}>{title}</a>
+      <a href={homepageUrl}>{title}</a>
     </h2>
   );
 };
