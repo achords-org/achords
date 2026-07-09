@@ -637,16 +637,16 @@ generate_files() {
   # Build repos table
   local repos_table=""
   
-  # Add .github (public - org profile)
+  # Add achords-managed repos (always included)
   repos_table+="| \`.github\` | Organization profile |"
-  
-  # Add .achords (private - agent rules)
   repos_table+=$'\n'"| \`.achords\` | Agent orchestration rules |"
+  repos_table+=$'\n'"| \`.internal\` | Internal team documentation |"
+  repos_table+=$'\n'"| \`.skills\` | Shared skills library |"
   
-  # Add existing public repos from the organization (excluding achords-managed private repos)
+  # Add existing public repos from the organization
   if [ "$repos_json" != "[]" ] && [ -n "$repos_json" ]; then
     local existing_repos
-    existing_repos=$(echo "$repos_json" | jq -r '.[] | select(.name != ".github" and .name != ".internal" and .name != ".skills") | "\(.name)|\(.description // "No description")"' 2>/dev/null)
+    existing_repos=$(echo "$repos_json" | jq -r '.[] | select(.name != ".github" and .name != ".internal" and .name != ".skills" and .name != ".achords") | "\(.name)|\(.description // "No description")"' 2>/dev/null)
     
     if [ -n "$existing_repos" ]; then
       while IFS='|' read -r repo_name repo_desc; do
@@ -761,13 +761,16 @@ EOF
   # Build repos table
   local repos_table=""
   
-  # Add .github (public - org profile)
+  # Add achords-managed repos (always included)
   repos_table+="| \`.github\` | Organization profile |"
+  repos_table+=$'\n'"| \`.achords\` | Agent orchestration rules |"
+  repos_table+=$'\n'"| \`.internal\` | Internal team documentation |"
+  repos_table+=$'\n'"| \`.skills\` | Shared skills library |"
   
   # Add existing public repos from the organization
   if [ "$repos_json" != "[]" ] && [ -n "$repos_json" ]; then
     local existing_repos
-    existing_repos=$(echo "$repos_json" | jq -r '.[] | select(.name != ".github" and .name != ".internal" and .name != ".skills") | "\(.name)|\(.description // "No description")"' 2>/dev/null)
+    existing_repos=$(echo "$repos_json" | jq -r '.[] | select(.name != ".github" and .name != ".internal" and .name != ".skills" and .name != ".achords") | "\(.name)|\(.description // "No description")"' 2>/dev/null)
     
     if [ -n "$existing_repos" ]; then
       while IFS='|' read -r repo_name repo_desc; do
