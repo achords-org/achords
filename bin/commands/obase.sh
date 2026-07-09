@@ -948,7 +948,8 @@ discover_org_skills() {
   local repo_list=""
   
   for repo in $all_repos; do
-    # Skip special repos
+    # Skip infrastructure repos (never scanned for skills or headers)
+    # .internal is specifically protected — team docs stay internal
     if [[ "$repo" == ".github" || "$repo" == ".achords" || "$repo" == ".skills" || "$repo" == ".internal" ]]; then
       continue
     fi
@@ -1477,6 +1478,73 @@ summary() {
   echo "    2. Add team members to ${WORK_DIR}/.internal/"
   echo "    3. Start adding skills to ${WORK_DIR}/.skills/"
   echo ""
+  
+  # Write init log for debugging
+  write_init_log
+}
+
+# ── write init log (gitignored, debug only) ─────────────────────────
+write_init_log() {
+  local log_dir="${WORK_DIR}/.achords"
+  local log_file="${log_dir}/init-log.json"
+  mkdir -p "$log_dir"
+  
+  # Collect repo states
+  local repos_json=""
+  local first=true
+  for repo_dir in "$WORK_DIR"/*/; do
+    [ -d "$repo_dir/.git" ] || continue
+    local name
+    name=$(basename "$repo_dir")
+    local has_agents=false
+    local has_engram=false
+    local has_achords_sub=false
+    local has_skills_sub=false
+    local last_commit=""
+    
+    [ -f "$repo_dir/AGENTS.md" ] && has_agents=true
+    [ -d "$repo_dir/.engram" ] && has_engram=true
+    [ -f "$repo_dir/.gitmodules" ] && grep -q ".achords" "$repo_dir/.gitmodules" 2>/dev/null && has_achords_sub=true
+    [ -f "$repo_dir/.gitmodules" ] && grep -q ".skills" "$repo_dir/.gitmodules" 2>/dev/null && has_skills_sub=true
+    last_commit=$(git -C "$repo_dir" log --oneline -1 2>/dev/null || echo "")
+    
+    if [ "$first" = true ]; then first=false; else repos_json+=","; fi
+    repos_json+=$(cat << OBJ
+    "${name}": {
+      "has_agents_md": ${has_agents},
+      "has_engram": ${has_engram},
+      "has_achords_submodule": ${has_achords_sub},
+      "has_skills_submodule": ${has_skills_sub},
+      "last_commit": "${last_commit}"
+    }
+OBJ
+)
+  done
+  
+  local now
+  now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  
+  cat > "$log_file" << EOF
+{
+  "tool": "achords obase",
+  "version": "$(get_version)",
+  "org": "${ORG_NAME}",
+  "timestamp": "${now}",
+  "work_dir": "${WORK_DIR}",
+  "auto_push": ${AUTO_PUSH},
+  "repos": {
+${repos_json}
+  }
+}
+EOF
+  
+  # Ensure .achords/.gitignore ignores this log
+  local gitignore="${log_dir}/.gitignore"
+  if ! grep -q "^init-log.json$" "$gitignore" 2>/dev/null; then
+    echo "init-log.json" >> "$gitignore"
+  fi
+  
+  ok "Init log saved to ${log_file}"
 }
 
 # ── update AGENTS.md headers in all repos ──────────────────────────
@@ -1567,17 +1635,36 @@ update_all_agents_headers() {
 # ${repo}
 
 > Agent configuration for this repository.
+>
+> This file is PART OF the achords organization orchestration system.
+> By reading and following this file, you agree to operate within the
+> organization's policies, conventions, and standards.
 
 ## Reading Order
 
-1. \`.achords/AGENTS.md\` — Org rules (main entry point)
-2. \`.skills/AGENTS.md\` — Skills rules
-3. \`.engram/config.json\` — Repo project name
-4. This file — Repo-specific rules
+Files MUST be read in order before any task. Each layer defines
+constraints and context for the next.
+
+1. **\`.achords/AGENTS.md\`** — Org rules (governance, protocols, escalation)
+2. **\`.achords/config/policies.json\`** — Access control, review requirements
+3. **\`.achords/config/conventions.json\`** — Code conventions and standards
+4. **\`.skills/AGENTS.md\`** — Skills rules and patterns
+5. **\`.skills/skills/\`** — Reusable skill library
+6. **\`.internal/onboarding/\`** — Team docs (if applicable)
+7. **\`.engram/config.json\`** — Repo context and project name
+8. **This file** — Repo-specific rules (overrides/extensions)
 
 ## Organization Rules
 
-Read \`.achords/AGENTS.md\` for organization-wide agent rules.
+The entire \`.achords/\` directory defines how agents operate. Every
+session MUST start by loading org rules, policies, and conventions.
+
+## Memory Protocol
+
+- **Org memory**: \`.achords/.engram/\` — shared, git-synced
+- **Repo memory**: \`.engram/\` — isolated to this repo
+- Save decisions, bugs, and patterns
+- Use \`project: "${ORG_NAME}"\` for org-level saves
 
 ## Repository-Specific Rules
 
@@ -1649,17 +1736,36 @@ EOF
 # ${repo}
 
 > Agent configuration for this repository.
+>
+> This file is PART OF the achords organization orchestration system.
+> By reading and following this file, you agree to operate within the
+> organization's policies, conventions, and standards.
 
 ## Reading Order
 
-1. \`.achords/AGENTS.md\` — Org rules (main entry point)
-2. \`.skills/AGENTS.md\` — Skills rules
-3. \`.engram/config.json\` — Repo project name
-4. This file — Repo-specific rules
+Files MUST be read in order before any task. Each layer defines
+constraints and context for the next.
+
+1. **\`.achords/AGENTS.md\`** — Org rules (governance, protocols, escalation)
+2. **\`.achords/config/policies.json\`** — Access control, review requirements
+3. **\`.achords/config/conventions.json\`** — Code conventions and standards
+4. **\`.skills/AGENTS.md\`** — Skills rules and patterns
+5. **\`.skills/skills/\`** — Reusable skill library
+6. **\`.internal/onboarding/\`** — Team docs (if applicable)
+7. **\`.engram/config.json\`** — Repo context and project name
+8. **This file** — Repo-specific rules (overrides/extensions)
 
 ## Organization Rules
 
-Read \`.achords/AGENTS.md\` for organization-wide agent rules.
+The entire \`.achords/\` directory defines how agents operate. Every
+session MUST start by loading org rules, policies, and conventions.
+
+## Memory Protocol
+
+- **Org memory**: \`.achords/.engram/\` — shared, git-synced
+- **Repo memory**: \`.engram/\` — isolated to this repo
+- Save decisions, bugs, and patterns
+- Use \`project: "${ORG_NAME}"\` for org-level saves
 
 ## Repository-Specific Rules
 
@@ -1673,13 +1779,13 @@ EOF
     # Add .achords submodule if not present
     if [ ! -d ".achords" ]; then
       info "${repo}: adding .achords submodule..."
-      git submodule add "https://github.com/${ORG_NAME}/.achords.git" .achords 2>/dev/null || true
+      git submodule add "https://github.com/${ORG_NAME}/.achords.git" .achords 2>/dev/null || warn "${repo}: could not add .achords submodule"
     fi
     
     # Add .skills submodule if not present
     if [ ! -d ".skills" ]; then
       info "${repo}: adding .skills submodule..."
-      git submodule add "https://github.com/${ORG_NAME}/.skills.git" .skills 2>/dev/null || true
+      git submodule add "https://github.com/${ORG_NAME}/.skills.git" .skills 2>/dev/null || warn "${repo}: could not add .skills submodule"
     fi
     
     # Create .engram if not present
@@ -1694,10 +1800,12 @@ EOF
 EOF
     fi
     
-    # Commit changes if any
+    # Commit changes if any — add known files BEFORE submodules
+    # (submodules that fail to init break git add -A)
     if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
       info "${repo}: committing injected configuration..."
-      git add -A 2>/dev/null || true
+      git add AGENTS.md .engram/ 2>/dev/null || true
+      git add .gitmodules .achords .skills 2>/dev/null || true
       git commit -m "chore: inject achords agent configuration (AGENTS.md, .engram, submodules)" --quiet 2>/dev/null || true
     fi
     
