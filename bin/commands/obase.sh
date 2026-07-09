@@ -425,9 +425,17 @@ init_achords_repo() {
   
   local achords_dir="${WORK_DIR}/.achords"
   
+  # Bootstrap git repo if missing (e.g., clone failed)
   if [ ! -d "$achords_dir/.git" ]; then
-    err "Not a git repository: ${achords_dir}"
-    return 1
+    if [ ! -d "$achords_dir" ]; then
+      mkdir -p "$achords_dir"
+    fi
+    info "Bootstrapping .achords git repository..."
+    git -C "$achords_dir" init --quiet
+    git -C "$achords_dir" remote add origin "https://github.com/${ORG_NAME}/.achords.git" 2>/dev/null || true
+    echo ".achords — Agent orchestration rules and versioned configuration" > "$achords_dir/README.md"
+    git -C "$achords_dir" add README.md && git -C "$achords_dir" commit -m "init: bootstrap .achords" --quiet
+    ok ".achords bootstrapped (will need push)"
   fi
   
   # Use subshell to prevent cd from leaking global state
