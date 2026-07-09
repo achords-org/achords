@@ -26,7 +26,7 @@ Set up a new team member's local environment by cloning the organization's core 
 
 1. Validates GitHub CLI authentication
 2. Detects or accepts organization name
-3. Clones core repositories to `~/achords-workspace/`:
+3. Clones core repositories to `~/achords/{org-name}/`:
    - `.github` — Organization profile
    - `.internal` — Team docs, onboarding, agent config
    - `.skills` — Agent skills library
@@ -67,7 +67,7 @@ Cloning repositories...
   clone .github...
   clone .internal...
   clone .skills...
-All repos cloned to ~/achords-workspace/
+All repos cloned to ~/achords/my-org/
 Setup complete
 ```
 
@@ -75,14 +75,14 @@ Setup complete
 
 After setup:
 ```bash
-cat ~/achords-workspace/.internal/onboarding/README.md
-cat ~/achords-workspace/.internal/onboarding/AGENTS.md
+cat ~/achords/my-org/.internal/onboarding/README.md
+cat ~/achords/my-org/.internal/onboarding/AGENTS.md
 ```
 
 ## Files created
 
 ```
-~/achords-workspace/
+~/achords/{org-name}/
 ├── .github/          # Organization profile
 ├── .internal/        # Team docs and onboarding
 │   └── onboarding/
@@ -101,7 +101,7 @@ cat ~/achords-workspace/.internal/onboarding/AGENTS.md
 For AI agents, point the agent to:
 
 ```
-~/achords-workspace/.internal/onboarding/skills/join-team/SKILL.md
+~/achords/{org-name}/.internal/onboarding/skills/join-team/SKILL.md
 ```
 
 The agent will:

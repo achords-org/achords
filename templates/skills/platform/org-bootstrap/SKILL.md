@@ -29,7 +29,7 @@ Bootstrap a GitHub organization with the repository structure required for Achor
    - `.github` (public) — Organization profile
    - `.internal` (private) — Team docs, onboarding, agent config
    - `.skills` (private) — Agent skills library
-3. Clones all repos locally to `~/achords-workspace/`
+3. Clones all repos locally to `~/achords/{org-name}/`
 4. Generates base files:
    - `.github/profile/README.md` — Organization description
    - `.internal/onboarding/README.md` — Team onboarding entry point
@@ -85,7 +85,7 @@ The script will:
 ✓ Repository .github created (public)
 ✓ Repository .internal created (private)
 ✓ Repository .skills created (private)
-✓ All repos cloned to ~/achords-workspace/
+✓ All repos cloned to ~/achords/my-org/
 ✓ Base files generated
 ✓ Bootstrap complete
 ```
@@ -93,14 +93,14 @@ The script will:
 ### 5. Customize
 
 After bootstrap:
-- Edit `~/achords-workspace/.github/profile/README.md` with org description
-- Edit `~/achords-workspace/.internal/onboarding/AGENTS.md` with team protocols
-- Add skills to `~/achords-workspace/.skills/`
+- Edit `~/achords/my-org/.github/profile/README.md` with org description
+- Edit `~/achords/my-org/.internal/onboarding/AGENTS.md` with team protocols
+- Add skills to `~/achords/my-org/.skills/`
 
 ## Files created
 
 ```
-~/achords-workspace/
+~/achords/{org-name}/
 ├── .github/
 │   └── profile/
 │       └── README.md

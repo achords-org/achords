@@ -36,7 +36,7 @@ fi
 
 ORG="$1"
 SKILLS_URL="${2:-}"
-WORK_DIR="${HOME}/achords-workspace"
+WORK_DIR="${HOME}/achords/${ORG}"
 
 echo "Achords — Organization Bootstrap"
 echo "================================"
@@ -215,16 +215,16 @@ echo ""
 ok "Bootstrap complete!"
 echo ""
 echo "Structure:"
-echo "  ~/achords-workspace/"
+echo "  ~/achords/${ORG}/"
 echo "  ├── .github/"
 echo "  ├── .internal/"
 echo "  └── .skills/"
 echo ""
 echo "Next steps:"
-echo "  1. Edit ~/achords-workspace/.github/profile/README.md"
-echo "  2. Edit ~/achords-workspace/.internal/onboarding/AGENTS.md"
+echo "  1. Edit ~/achords/${ORG}/.github/profile/README.md"
+echo "  2. Edit ~/achords/${ORG}/.internal/onboarding/AGENTS.md"
 if [ -n "$SKILLS_URL" ]; then
   echo "  3. Skills loaded from ${SKILLS_URL}"
 else
-  echo "  3. Add skills to ~/achords-workspace/.skills/"
+  echo "  3. Add skills to ~/achords/${ORG}/.skills/"
 fi

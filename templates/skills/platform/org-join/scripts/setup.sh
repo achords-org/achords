@@ -18,7 +18,7 @@ fi
 
 ORG="$1"
 REPOS=(".github" ".internal" ".skills")
-WORK_DIR="${HOME}/achords-workspace"
+WORK_DIR="${HOME}/achords/${ORG}"
 
 echo "Achords — Organization Join"
 echo "==========================="

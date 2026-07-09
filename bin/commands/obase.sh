@@ -65,7 +65,7 @@ show_help() {
   echo "  Options:"
   echo "    --org <name>          Organization name"
   echo "    --skills <url>        Skills repository URL"
-  echo "    --dir <path>          Work directory (default: ~/achords-workspace)"
+  echo "    --dir <path>          Work directory (default: ~/achords/{org})"
   echo "    --repo <name>         Setup existing repo for agent memory"
   echo "    --update-profile      Update repos table in profile README only"
   echo "    --update-headers      Update AGENTS.md headers in all repos"
@@ -86,11 +86,12 @@ show_help() {
 parse_args() {
   ORG_NAME=""
   SKILLS_URL=""
-  WORK_DIR="${HOME}/achords-workspace"
+  WORK_DIR=""
   UPDATE_PROFILE=false
   UPDATE_HEADERS=false
   AUTO_PUSH=false
   REPO_NAME=""
+  DIR_OVERRIDE=false
   
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -104,6 +105,7 @@ parse_args() {
         ;;
       --dir)
         WORK_DIR="$2"
+        DIR_OVERRIDE=true
         shift 2
         ;;
       --repo)
@@ -1260,6 +1262,13 @@ main() {
   # Skip banner if sourced by parent
   if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
     return
+  fi
+  
+  # Set WORK_DIR based on ORG_NAME if not overridden
+  if [ "$DIR_OVERRIDE" = false ] && [ -n "$ORG_NAME" ]; then
+    WORK_DIR="${HOME}/achords/${ORG_NAME}"
+  elif [ -z "$WORK_DIR" ]; then
+    WORK_DIR="${HOME}/achords"
   fi
   
   echo "$BANNER"
