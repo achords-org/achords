@@ -410,7 +410,7 @@ clone_repos() {
       ok "${repo} exists locally"
     else
       info "Cloning ${repo}..."
-      git clone "https://github.com/${ORG_NAME}/${repo}.git" "$target" --quiet 2>/dev/null || {
+      git clone "https://github.com/${ORG_NAME}/${repo}.git" "$target" --quiet --depth 1 2>/dev/null || {
         warn "Could not clone ${repo}, will init later"
         continue
       }
@@ -954,23 +954,29 @@ discover_org_skills() {
     fi
     
     local repo_dir="${WORK_DIR}/${repo}"
-    
-    # Clone if not exists
-    if [ ! -d "$repo_dir" ]; then
-      info "Cloning ${repo}..."
-      git clone "https://github.com/${ORG_NAME}/${repo}.git" "$repo_dir" --quiet 2>/dev/null || continue
-    fi
-    
-    # Determine skill source directories (support both skills/ and .skills/skills/)
+    local has_skills=false
     local source_dirs=()
-    if [ -d "$repo_dir/skills" ]; then
+    
+    # First check via GitHub API (fast, no clone needed)
+    if gh api "repos/${ORG_NAME}/${repo}/contents/skills" --jq '.' 2>/dev/null >/dev/null; then
+      has_skills=true
+      # Clone only if we need to import skills from it
+      if [ ! -d "$repo_dir" ]; then
+        info "Cloning ${repo} (has skills/...)"
+        git clone "https://github.com/${ORG_NAME}/${repo}.git" "$repo_dir" --quiet --depth 1 2>/dev/null || continue
+      fi
       source_dirs+=("$repo_dir/skills")
     fi
-    if [ -d "$repo_dir/.skills/skills" ]; then
+    if gh api "repos/${ORG_NAME}/${repo}/contents/.skills/skills" --jq '.' 2>/dev/null >/dev/null; then
+      has_skills=true
+      if [ ! -d "$repo_dir" ]; then
+        info "Cloning ${repo} (has .skills/skills/...)"
+        git clone "https://github.com/${ORG_NAME}/${repo}.git" "$repo_dir" --quiet --depth 1 2>/dev/null || continue
+      fi
       source_dirs+=("$repo_dir/.skills/skills")
     fi
     
-    if [ ${#source_dirs[@]} -eq 0 ]; then
+    if [ "$has_skills" = false ]; then
       continue
     fi
     
@@ -1482,7 +1488,7 @@ update_all_agents_headers() {
     # Clone if not exists
     if [ ! -d "$repo_dir" ]; then
       info "Cloning ${repo}..."
-      git clone "https://github.com/${ORG_NAME}/${repo}.git" "$repo_dir" --quiet 2>/dev/null || {
+      git clone "https://github.com/${ORG_NAME}/${repo}.git" "$repo_dir" --quiet --depth 1 2>/dev/null || {
         warn "Could not clone ${repo}, skipping"
         continue
       }
