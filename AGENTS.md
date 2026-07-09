@@ -1,4 +1,4 @@
-<!-- achords:header:v1.1.1 -->
+<!-- achords:header:v1.2.1 -->
 <!-- achords:tags: { "product": "obase", "domain": "coordination", "type": "reference", "status": "stable", "audience": "agent" } -->
 <!-- achords:resources -->
 | Resource | Path | Purpose |
@@ -10,11 +10,12 @@
 | Docs | `web/docs/humans/` | Quartz documentation site |
 | Landing | `web/index.html` | Marketing page |
 | LLM Docs | `llms.txt` | AI-friendly project summary |
+| CLI Reference | `web/docs/humans/content/cli/` | CLI docs per command |
 <!-- achords:end -->
 
 # AGENTS.md — Achords Project
 
-> This is the achords repo itself. We use our own protocol — "en casa de herrero, cuchillo de palo".
+> This is the achords repo itself. We use our own protocol — "en casa de herrero, cuchillo de diamante".
 
 ## Project Status
 
@@ -165,14 +166,17 @@ Format in AGENTS.md:
 The only implemented product. Sets up GitHub orgs for multi-agent collaboration.
 
 ```bash
-# Create org
-achords obase --org my-company
+# Create org (with push)
+achords obase --org my-company --push
 
-# Configure repo
+# Configure a single repo
 achords obase --repo my-app
 
-# Update all repos
-achords obase --org my-company --update-headers
+# Update AGENTS.md headers in all repos
+achords obase --org my-company --update-headers --push
+
+# UPGRADE guides to latest achords version (regenerates full AGENTS.md body)
+achords obase --org my-company --upgrade --push
 ```
 
 What it creates:
@@ -180,6 +184,8 @@ What it creates:
 - `.achords/` — Agent rules + shared memory
 - `.internal/` — Team docs + onboarding
 - `.skills/` — Shared skills library
+
+**Upgrade flow**: Each achords release ships improved guide templates. Run `--upgrade` to sync existing orgs — custom repo rules under `## Repository-Specific Rules` are preserved.
 
 ### rcord, iaci, kbweb
 
@@ -193,6 +199,13 @@ Skills follow the Agent Skills specification. See `web/docs/humans/content/skill
 - `os-tagging.md` — Platform-specific skills
 - `creating-skills.md` — How to create new skills
 
+This project provides its own skill for agents working on achords:
+```
+docs/skills/achords/SKILL.md
+```
+Load it when implementing obase features, releasing, or updating docs.
+`<!-- achords:skill:docs/skills/achords/SKILL.md -->`
+
 ## Testing
 
 No automated tests yet. Manual testing:
@@ -204,7 +217,7 @@ No automated tests yet. Manual testing:
 ./bin/achords version
 
 # npx test
-npx achords@1.1.1 obase --help
+npx achords@1.2.1 obase --help
 ```
 
 ## Cloudflare Pages
@@ -215,13 +228,19 @@ npx achords@1.1.1 obase --help
 
 ## npm Publishing
 
-Triggered by git tags:
+Triggered by git tags via GitHub Actions (`.github/workflows/publish.yml`):
 ```bash
-git tag v1.1.1
-git push origin v1.1.1
+git tag v1.2.1
+git push origin v1.2.1
 ```
 
-Workflow: `.github/workflows/publish.yml`
+The workflow:
+1. Checkout + Node.js setup
+2. `npm install --ignore-scripts`
+3. `npm run build`
+4. `npm publish` with `NODE_AUTH_TOKEN` from secrets
+
+**Bump first** — always update `version` in `package.json` and the web landing page before tagging.
 
 ## Sensitive Data Rules
 

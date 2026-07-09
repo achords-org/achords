@@ -21,6 +21,7 @@ obase es la herramienta CLI para:
 - Inicialización de org en un comando
 - Configuración de repos via submodules
 - Actualización de headers AGENTS.md
+- Upgrade de guías completo con `--upgrade` (regenera body, preserva reglas custom)
 - Soporte multi-organización
 - Skills versionados con OS tagging
 
@@ -28,13 +29,16 @@ obase es la herramienta CLI para:
 
 ```bash
 # Crear org
-achords obase --org my-company
+achords obase --org my-company --push
 
 # Configurar repo
 achords obase --repo my-app
 
-# Actualizar todos los repos
-achords obase --org my-company --update-headers
+# Actualizar headers
+achords obase --org my-company --update-headers --push
+
+# Upgrade guías completas (cuando achords se actualiza)
+achords obase --org my-company --upgrade --push
 ```
 
 ## Ver también

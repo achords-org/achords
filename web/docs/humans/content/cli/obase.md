@@ -22,7 +22,8 @@ achords obase [options]
 | `--repo` | Repo a configurar | Ninguno |
 | `--dir` | Directorio custom | `~/achords/{org}` |
 | `--skills` | URL del repo de skills | Ninguno |
-| `--update-headers` | Actualizar AGENTS.md en todos los repos | false |
+| `--update-headers` | Actualizar AGENTS.md headers en todos los repos | false |
+| `--upgrade` | Regenerar guías completas desde la versión actual de achords (preserva reglas custom) | false |
 | `--push` | Push cambios a GitHub | false |
 
 ## Ejemplos
@@ -45,7 +46,15 @@ achords obase --repo my-app
 ### Actualizar todos los repos
 
 ```bash
-achords obase --org my-company --update-headers
+achords obase --org my-company --update-headers --push
+```
+
+### Upgrade guías a nueva versión de achords
+
+```bash
+# Regenera AGENTS.md completo en todos los repos
+# (preserva reglas custom debajo de ## Repository-Specific Rules)
+achords obase --org my-company --upgrade --push
 ```
 
 ### Directorio custom

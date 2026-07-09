@@ -3,6 +3,6 @@
   "scope": "repo",
   "org_level": "achords-org",
   "created_at": "2026-07-09T16:00:00Z",
-  "achords_version": "1.1.1",
+  "achords_version": "1.2.1",
   "description": "Achords multi-agent orchestration protocol"
 }

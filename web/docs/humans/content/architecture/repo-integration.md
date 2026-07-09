@@ -38,11 +38,36 @@ cd ~/achords/my-company/my-app
 git submodule update --remote .achords .skills
 ```
 
-O usa `--update-headers` para actualizar todos los repos:
+### Actualización rápida (headers)
+
+Usa `--update-headers` para actualizar la version en AGENTS.md de todos los repos:
 
 ```bash
-achords obase --org my-company --update-headers
+achords obase --org my-company --update-headers --push
 ```
+
+### Upgrade completo (cuando achords se actualiza)
+
+Cuando instalás una versión nueva de achords, las guías pueden haber mejorado (nuevas secciones en AGENTS.md, mejores defaults, etc.). Usa `--upgrade` para regenerar TODO el contenido:
+
+```bash
+achords obase --org my-company --upgrade --push
+```
+
+Esto regenera:
+- `.achords/AGENTS.md` con el template actual
+- `.achords/config/policies.json` con defaults actualizados
+- `.achords/version.json` con la nueva `achords_version`
+- AGENTS.md de CADA repo existente (body completo)
+- **Preserva** las reglas custom debajo de `## Repository-Specific Rules`
+
+### Diferencia entre `--update-headers` y `--upgrade`
+
+| `--update-headers` | `--upgrade` |
+|--------------------|-------------|
+| Solo actualiza el header version | Regenera header + body completo |
+| No toca el body template | Reemplaza secciones obsoletas |
+| Rápido, seguro | Más lento, para upgrades de versión |
 
 ## AGENTS.md
 
