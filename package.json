@@ -3,7 +3,7 @@
   "version": "1.5.1",
   "description": "Multi-agent orchestration protocol for software development",
   "bin": {
-    "achords": "./bin/achords"
+    "achords": "bin/achords"
   },
   "files": [
     "bin/",
@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/achords-org/achords.git"
+    "url": "git+https://github.com/achords-org/achords.git"
   },
   "keywords": [
     "multi-agent",
