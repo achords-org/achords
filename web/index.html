@@ -48,7 +48,7 @@
       "price": "0",
       "priceCurrency": "USD"
     },
-    "softwareVersion": "1.2.1",
+    "softwareVersion": "1.5.0",
     "author": {
       "@type": "Organization",
       "name": "achords-org",
@@ -170,7 +170,7 @@
               </a>
               <a href="https://www.npmjs.com/package/achords" class="flex items-center gap-2 px-4 py-2 border border-[#27272a] rounded-full text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white hover:border-white transition-all">
                 <span class="text-red-500">●</span>
-                <span>v1.2.1</span>
+                <span id="npm-version">v1.5.0</span>
                 <span class="text-zinc-600">npm</span>
               </a>
               <div class="relative group">
@@ -414,6 +414,17 @@
     }
     generateWaveform('waveform-top')
     generateWaveform('waveform-bottom')
+  </script>
+
+  <!-- Dynamic npm version badge -->
+  <script>
+    fetch('https://registry.npmjs.org/achords/latest')
+      .then(r => r.json())
+      .then(d => {
+        const el = document.getElementById('npm-version')
+        if (el) el.textContent = 'v' + d.version
+      })
+      .catch(() => {}) // keep fallback "v1.5.0"
   </script>
 
 </body>
