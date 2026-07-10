@@ -22,6 +22,7 @@ Toda sesión de agente sigue este flujo.
 │    - Leer .achords/AGENTS.md            │
 │    - Leer .skills/AGENTS.md             │
 │    - Leer .engram/config.json           │
+│    - Leer .achords/.engram/config.json  │
 └─────────────────────────────────────────┘
                     ↓
 ┌─────────────────────────────────────────┐
@@ -52,7 +53,8 @@ Estos archivos DEBEN leerse al inicio:
 |---------|-----------|
 | `.achords/AGENTS.md` | Reglas de org |
 | `.skills/AGENTS.md` | Documentación de skills |
-| `.engram/config.json` | Configuración de memoria |
+| `.engram/config.json` | Configuración de memoria de repo |
+| `.achords/.engram/config.json` | Configuración de memoria de org |
 
 ## Lecturas on-demand
 

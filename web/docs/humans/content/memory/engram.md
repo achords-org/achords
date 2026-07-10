@@ -35,13 +35,31 @@ Engram se configura automáticamente cuando ejecutas `achords obase`.
 
 ## Configuración
 
-`.engram/config.json`:
+### Org memory (`.achords/.engram/config.json`)
+
+Creado por `obase init` dentro del `.achords` repo. Viaja a cada repo miembro via submodule.
 
 ```json
 {
-  "project": "my-app",
-  "memory_backend": "sqlite",
-  "auto_save": true
+  "project_name": ".achords",
+  "scope": "org",
+  "org_name": "my-company",
+  "created_at": "2026-07-09T20:00:00Z",
+  "achords_version": "1.5.0",
+  "description": "Shared org memory for my-company — conventions, decisions, patterns"
+}
+```
+
+### Repo memory (`.engram/config.json`)
+
+Creado por `achords obase --repo my-app` en cada repo miembro.
+
+```json
+{
+  "project_name": "my-app",
+  "scope": "repo",
+  "org_level": "my-company",
+  "created_at": "2026-07-09T20:00:00Z"
 }
 ```
 

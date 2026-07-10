@@ -24,6 +24,8 @@ achords obase [options]
 | `--skills` | URL del repo de skills | Ninguno |
 | `--update-headers` | Actualizar AGENTS.md headers en todos los repos | false |
 | `--upgrade` | Regenerar guías completas desde la versión actual de achords (preserva reglas custom) | false |
+| `--template-version` | Pin versión de template AGENTS.md (`v1` o `v2`) | `latest` |
+| `--list-templates` | Listar versiones de templates disponibles | false |
 | `--push` | Push cambios a GitHub | false |
 
 ## Ejemplos
@@ -57,6 +59,16 @@ achords obase --org my-company --update-headers --push
 achords obase --org my-company --upgrade --push
 ```
 
+### Template version
+
+```bash
+# Usar template clásico (v1) en vez del latest (v2)
+achords obase --org my-company --template-version v1 --update-headers
+
+# Listar versiones disponibles
+achords obase --org my-company --list-templates
+```
+
 ### Directorio custom
 
 ```bash
@@ -70,6 +82,11 @@ achords obase --org my-company --dir /custom/path
 ```
 ~/achords/my-company/
 ├── .achords/
+│   ├── AGENTS.md
+│   ├── .engram/          ← org memory (git-synced)
+│   ├── config/
+│   ├── templates/
+│   └── version.json
 ├── .skills/
 ├── .internal/
 └── .github/
@@ -80,9 +97,11 @@ achords obase --org my-company --dir /custom/path
 ```
 my-app/
 ├── .achords → (submodule)
+│   └── .engram/            ← org memory via submodule
 ├── .skills  → (submodule)
-├── .engram/
-└── AGENTS.md
+├── .engram/                 ← repo memory
+├── AGENTS.md                ← instrucciones
+└── src/
 ```
 
 ## Ver también

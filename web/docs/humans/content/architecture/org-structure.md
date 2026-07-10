@@ -14,7 +14,7 @@ Qué vive dónde en una organización Achords.
 ~/achords/{org-name}/
 ├── .achords/           # Reglas de agentes
 │   ├── AGENTS.md       # Reglas para todos
-│   ├── .engram/        # Memoria compartida
+│   ├── .engram/        # Memoria de org (compartida, git-synced)
 │   ├── conventions.json
 │   └── policies.json
 ├── .skills/            # Skills compartidos
@@ -42,7 +42,7 @@ Qué vive dónde en una organización Achords.
 La fuente de verdad para comportamiento de agentes. Contiene:
 
 - `AGENTS.md` — Instrucciones para todos los agentes
-- `.engram/` — Base de datos de memoria compartida
+- `.engram/` — Memoria de org (compartida via submodule, git-synced)
 - `conventions.json` — Convenciones de código
 - `policies.json` — Políticas organizacionales
 

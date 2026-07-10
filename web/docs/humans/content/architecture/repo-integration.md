@@ -12,7 +12,7 @@ Cómo los repos importan reglas de la org via git submodules.
 
 Cuando ejecutas `achords obase --repo my-app`, hace:
 
-1. Agrega `.achords` como submodule
+1. Agrega `.achords` como submodule (trae reglas + org memory)
 2. Agrega `.skills` como submodule
 3. Crea `.engram/` para memoria del repo
 4. Crea `AGENTS.md` con instrucciones
@@ -22,12 +22,32 @@ Cuando ejecutas `achords obase --repo my-app`, hace:
 ```
 my-app/
 ├── .achords → ../.achords/ (submodule)
+│   ├── AGENTS.md               (reglas de org)
+│   ├── config/                 (convenciones, policies)
+│   ├── templates/AGENTS/       (templates versionados)
+│   └── .engram/                (org memory — compartida)
 ├── .skills  → ../.skills/  (submodule)
-├── .engram/                (memoria repo)
-├── AGENTS.md               (instrucciones)
+├── .engram/                    (repo memory — aislada)
+├── AGENTS.md                   (instrucciones del repo)
 ├── src/
 └── ...
 ```
+
+## Sincronización de org memory
+
+`.achords/.engram/` vive DENTRO del submodule `.achords`. Cuando hacés `git submodule update --remote .achords`, recibís tanto las reglas como la memoria de org.
+
+```
+# En cada repo miembro:
+git submodule update --remote .achords
+
+# Esto trae:
+#   - Nuevas reglas en .achords/AGENTS.md
+#   - Nueva memoria de org en .achords/.engram/
+#   - Nuevos templates en .achords/templates/AGENTS/
+```
+
+No hay paso extra — la org memory viaja con el submodule.
 
 ## Actualizar reglas de org
 
