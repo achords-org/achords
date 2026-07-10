@@ -465,6 +465,22 @@ init_achords_repo() {
     mkdir -p templates
     mkdir -p .engram/chunks
     
+    # Resolve achords version before using it
+    local achords_version
+    achords_version=$(get_version)
+    
+    # Create .engram/config.json for org-level memory
+    cat > .engram/config.json << EOF
+{
+  "project_name": ".achords",
+  "scope": "org",
+  "org_name": "${ORG_NAME}",
+  "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "achords_version": "${achords_version}",
+  "description": "Shared org memory for ${ORG_NAME} — conventions, decisions, patterns"
+}
+EOF
+    
     # Create version.json
     cat > version.json << 'EOF'
 {
@@ -486,9 +502,6 @@ EOF
     sed -i "s/\"ORG_NAME\"/\"${ORG_NAME}\"/g" version.json
     
     # Create AGENTS.md - the main entry point for agents
-    local achords_version
-    achords_version=$(get_version)
-    
     cat > AGENTS.md << EOF
 <!-- achords:header:v${achords_version} -->
 <!-- achords:tags: { "product": "obase", "domain": "coordination", "type": "reference", "status": "stable", "audience": "agent" } -->
