@@ -115,6 +115,8 @@ parse_args() {
   AUTO_PUSH=false
   REPO_NAME=""
   DIR_OVERRIDE=false
+  TEMPLATE_VERSION=""
+  LIST_TEMPLATES=false
   # CLI flag tracking (for .env precedence)
   _ORG_SET=""
   _SKILLS_SET=""
@@ -156,6 +158,14 @@ parse_args() {
         ;;
       --push)
         AUTO_PUSH=true
+        shift
+        ;;
+      --template-version)
+        TEMPLATE_VERSION="$2"
+        shift 2
+        ;;
+      --list-templates)
+        LIST_TEMPLATES=true
         shift
         ;;
       --help|-h)
@@ -1547,9 +1557,110 @@ EOF
   ok "Init log saved to ${log_file}"
 }
 
+# ── template management ──────────────────────────────────────────────
+
+# Get available template versions from .achords/templates/AGENTS/
+get_available_templates() {
+  local template_dir="${1:-${WORK_DIR}/.achords/templates/AGENTS}"
+  if [ ! -d "$template_dir" ]; then
+    return 1
+  fi
+  ls "$template_dir"/v*.md 2>/dev/null | sed 's/.*\/v//' | sed 's/\.md$//' | sort -V
+}
+
+# Get latest template version from the 'latest' pointer file
+get_latest_template_version() {
+  local template_dir="${1:-${WORK_DIR}/.achords/templates/AGENTS}"
+  local latest_file="${template_dir}/latest"
+  if [ -f "$latest_file" ]; then
+    cat "$latest_file"
+  else
+    get_available_templates "$template_dir" | tail -1
+  fi
+}
+
+# Resolve the effective template version to use
+resolve_template_version() {
+  local requested="$1"
+  local template_dir="${2:-${WORK_DIR}/.achords/templates/AGENTS}"
+  
+  if [ -n "$requested" ]; then
+    echo "$requested"
+  else
+    get_latest_template_version "$template_dir"
+  fi
+}
+
+# Read a template file and substitute placeholders
+read_template() {
+  local template_file="$1"
+  local repo="$2"
+  local org_name="$3"
+  local achords_version="$4"
+  
+  if [ ! -f "$template_file" ]; then
+    err "Template not found: ${template_file}"
+    return 1
+  fi
+  
+  local content
+  content=$(cat "$template_file")
+  content="${content//__ACHORDS_VERSION__/$achords_version}"
+  content="${content//__ORG_NAME__/$org_name}"
+  content="${content//__REPO__/$repo}"
+  echo "$content"
+}
+
+# Deploy templates from achords CLI to .achords repo in workdir
+deploy_templates() {
+  local achords_src="$1"
+  local dest="${WORK_DIR}/.achords/templates/AGENTS"
+  
+  if [ ! -d "$achords_src/templates/AGENTS" ]; then
+    err "No templates found at ${achords_src}/templates/AGENTS"
+    return 1
+  fi
+  
+  mkdir -p "$dest"
+  cp "$achords_src/templates/AGENTS/"v*.md "$dest/" 2>/dev/null || true
+  cp "$achords_src/templates/AGENTS/latest" "$dest/" 2>/dev/null || true
+  
+  ok "Templates deployed to .achords/templates/AGENTS/"
+}
+
+# List available templates with versions
+list_templates() {
+  local template_dir="${1:-${WORK_DIR}/.achords/templates/AGENTS}"
+  
+  if [ ! -d "$template_dir" ]; then
+    err "No templates directory found at ${template_dir}"
+    echo "  Run 'achords obase --org <name>' first to initialize"
+    return 1
+  fi
+  
+  echo "Available AGENTS.md templates:"
+  echo ""
+  
+  local latest
+  latest=$(get_latest_template_version "$template_dir")
+  
+  for v in $(get_available_templates "$template_dir"); do
+    local marker="  "
+    if [ "$v" = "$latest" ]; then
+      marker=" →"
+    fi
+    echo "  ${marker} v${v}"
+  done
+  
+  echo ""
+  echo "  Latest: v${latest}"
+  echo "  Use: achords obase --org <name> --template-version v${latest}"
+}
+
 # ── update AGENTS.md headers in all repos ──────────────────────────
 update_all_agents_headers() {
   local full_regenerate="${1:-false}"
+  local template_version="${2:-}"
   
   if [ "$full_regenerate" = "full" ]; then
     header "Regenerating AGENTS.md in all repositories"
@@ -1559,6 +1670,21 @@ update_all_agents_headers() {
   
   local achords_version
   achords_version=$(get_version)
+  
+  # Pre-read template content if full regenerate or create new
+  local template_content=""
+  if [ "$full_regenerate" = "full" ]; then
+    local template_dir="${WORK_DIR}/.achords/templates/AGENTS"
+    local effective_version
+    effective_version=$(resolve_template_version "$template_version" "$template_dir")
+    local template_file="${template_dir}/${effective_version}.md"
+    
+    if [ -f "$template_file" ]; then
+      template_content=$(read_template "$template_file" "__REPO__" "$ORG_NAME" "$achords_version") || true
+    else
+      warn "Template ${effective_version}.md not found at ${template_dir}. Using embedded fallback."
+    fi
+  fi
   
   # Get all repos in the org
   local repos
@@ -1611,65 +1737,28 @@ update_all_agents_headers() {
         # Extract custom repo rules (preserve content below ## Repository-Specific Rules)
         local custom_rules=""
         if grep -q "^## Repository-Specific Rules" AGENTS.md; then
-          custom_rules=$(awk '/^## Repository-Specific Rules/{found=1} found' AGENTS.md)
+          # Grab everything after the FIRST ## Repository-Specific Rules heading
+          custom_rules=$(awk '/^## Repository-Specific Rules/{if(++c==1)next} c>=1' AGENTS.md)
+          # Strip blank lines, default boilerplate, and any stray ## Repository-Specific Rules headings
+          custom_rules=$(echo "$custom_rules" | sed '/^## Repository-Specific Rules/d' | sed '/^[[:space:]]*$/d' | sed '/^Add your repo-specific rules here\.$/d')
         fi
         
-        # Generate full body template
-        cat > AGENTS.md << EOF
+        if [ -n "$template_content" ]; then
+          # Substitute __REPO__ placeholder with actual repo name
+          echo "${template_content//__REPO__/$repo}" > AGENTS.md
+        else
+          # Fallback: generate minimal header
+          cat > AGENTS.md << EOF
 <!-- achords:header:v${achords_version} -->
 <!-- achords:tags: { "product": "obase", "domain": "coordination", "type": "reference", "status": "stable", "audience": "agent" } -->
 <!-- achords:resources -->
 | Resource | Path | Purpose |
 |----------|------|---------|
-| Org Rules | \`.achords/AGENTS.md\` | Organization-wide agent rules |
-| Org Memory | \`.achords/.engram/\` | Shared knowledge (git-synced) |
-| Conventions | \`.achords/config/conventions.json\` | Code conventions |
-| Policies | \`.achords/config/policies.json\` | Org policies |
-| Skills Rules | \`.skills/AGENTS.md\` | How to create/maintain skills |
-| Skills | \`.skills/skills/\` | Shared skills (Agent Skills spec) |
-| Onboarding | \`.internal/onboarding/\` | Setup scripts and docs |
-| Repo Memory | \`.engram/\` | Isolated repo memory |
-| Repo Config | \`.engram/config.json\` | project_name setting |
 <!-- achords:end -->
 
 # ${repo}
-
-> Agent configuration for this repository.
->
-> This file is PART OF the achords organization orchestration system.
-> By reading and following this file, you agree to operate within the
-> organization's policies, conventions, and standards.
-
-## Reading Order
-
-Files MUST be read in order before any task. Each layer defines
-constraints and context for the next.
-
-1. **\`.achords/AGENTS.md\`** — Org rules (governance, protocols, escalation)
-2. **\`.achords/config/policies.json\`** — Access control, review requirements
-3. **\`.achords/config/conventions.json\`** — Code conventions and standards
-4. **\`.skills/AGENTS.md\`** — Skills rules and patterns
-5. **\`.skills/skills/\`** — Reusable skill library
-6. **\`.internal/onboarding/\`** — Team docs (if applicable)
-7. **\`.engram/config.json\`** — Repo context and project name
-8. **This file** — Repo-specific rules (overrides/extensions)
-
-## Organization Rules
-
-The entire \`.achords/\` directory defines how agents operate. Every
-session MUST start by loading org rules, policies, and conventions.
-
-## Memory Protocol
-
-- **Org memory**: \`.achords/.engram/\` — shared, git-synced
-- **Repo memory**: \`.engram/\` — isolated to this repo
-- Save decisions, bugs, and patterns
-- Use \`project: "${ORG_NAME}"\` for org-level saves
-
-## Repository-Specific Rules
-
-Add your repo-specific rules here.
 EOF
+        fi
         
         # Append preserved custom rules if found
         if [ -n "$custom_rules" ]; then
@@ -1713,64 +1802,24 @@ EOF
         ok "${repo}: header updated to v${achords_version}"
       fi
     else
-      # Create new AGENTS.md with minimal header
+      # Create new AGENTS.md
       info "${repo}: creating AGENTS.md..."
       
-      cat > AGENTS.md << EOF
+      if [ -n "$template_content" ]; then
+        echo "${template_content//__REPO__/$repo}" > AGENTS.md
+      else
+        # Fallback: generate minimal
+        cat > AGENTS.md << EOF
 <!-- achords:header:v${achords_version} -->
 <!-- achords:tags: { "product": "obase", "domain": "coordination", "type": "reference", "status": "stable", "audience": "agent" } -->
 <!-- achords:resources -->
 | Resource | Path | Purpose |
 |----------|------|---------|
-| Org Rules | \`.achords/AGENTS.md\` | Organization-wide agent rules |
-| Org Memory | \`.achords/.engram/\` | Shared knowledge (git-synced) |
-| Conventions | \`.achords/config/conventions.json\` | Code conventions |
-| Policies | \`.achords/config/policies.json\` | Org policies |
-| Skills Rules | \`.skills/AGENTS.md\` | How to create/maintain skills |
-| Skills | \`.skills/skills/\` | Shared skills (Agent Skills spec) |
-| Onboarding | \`.internal/onboarding/\` | Setup scripts and docs |
-| Repo Memory | \`.engram/\` | Isolated repo memory |
-| Repo Config | \`.engram/config.json\` | project_name setting |
 <!-- achords:end -->
 
 # ${repo}
-
-> Agent configuration for this repository.
->
-> This file is PART OF the achords organization orchestration system.
-> By reading and following this file, you agree to operate within the
-> organization's policies, conventions, and standards.
-
-## Reading Order
-
-Files MUST be read in order before any task. Each layer defines
-constraints and context for the next.
-
-1. **\`.achords/AGENTS.md\`** — Org rules (governance, protocols, escalation)
-2. **\`.achords/config/policies.json\`** — Access control, review requirements
-3. **\`.achords/config/conventions.json\`** — Code conventions and standards
-4. **\`.skills/AGENTS.md\`** — Skills rules and patterns
-5. **\`.skills/skills/\`** — Reusable skill library
-6. **\`.internal/onboarding/\`** — Team docs (if applicable)
-7. **\`.engram/config.json\`** — Repo context and project name
-8. **This file** — Repo-specific rules (overrides/extensions)
-
-## Organization Rules
-
-The entire \`.achords/\` directory defines how agents operate. Every
-session MUST start by loading org rules, policies, and conventions.
-
-## Memory Protocol
-
-- **Org memory**: \`.achords/.engram/\` — shared, git-synced
-- **Repo memory**: \`.engram/\` — isolated to this repo
-- Save decisions, bugs, and patterns
-- Use \`project: "${ORG_NAME}"\` for org-level saves
-
-## Repository-Specific Rules
-
-Add your repo-specific rules here.
 EOF
+      fi
       
       created=$((created + 1))
       ok "${repo}: AGENTS.md created"
@@ -1846,6 +1895,7 @@ EOF
 
 # ── upgrade guides to current achords version ──────────────────────
 upgrade_guides() {
+  local template_version="${1:-}"
   local achords_version
   achords_version=$(get_version)
 
@@ -2004,7 +2054,7 @@ EOF
   discover_org_skills
 
   # ── Step 3: Upgrade all existing repos ──
-  update_all_agents_headers "full"
+  update_all_agents_headers "full" "$template_version"
   
   # ── Step 4: Summary ──
   echo ""
@@ -2110,7 +2160,7 @@ main() {
     
     check_deps
     check_auth
-    update_all_agents_headers
+    update_all_agents_headers "false" "$TEMPLATE_VERSION"
     return
   fi
   
@@ -2127,7 +2177,23 @@ main() {
     check_deps
     check_auth
     check_org
-    upgrade_guides
+    # Deploy latest templates before upgrading
+    deploy_templates "$ACHORDS_DIR"
+    upgrade_guides "$TEMPLATE_VERSION"
+    return
+  fi
+  
+  # Handle --list-templates mode (no org needed)
+  if [ "$LIST_TEMPLATES" = true ]; then
+    load_env
+    
+    if [ -z "$ORG_NAME" ]; then
+      err "No organization name found."
+      echo "  Run: achords obase --org <name> --list-templates"
+      exit 1
+    fi
+    
+    list_templates "${WORK_DIR}/.achords/templates/AGENTS"
     return
   fi
   
@@ -2144,9 +2210,10 @@ main() {
   clone_repos
   init_achords_repo || warn ".achords init skipped — continuing with repo injection"
   generate_files
+  deploy_templates "$ACHORDS_DIR"
   import_skills
   discover_org_skills
-  update_all_agents_headers
+  update_all_agents_headers "false" "$TEMPLATE_VERSION"
   summary
 }
 
