@@ -153,6 +153,8 @@ Format in AGENTS.md:
 |------|---------|
 | `bin/achords` | CLI entry point — resolves symlinks for npx |
 | `bin/commands/obase.sh` | Organization Base setup (1300+ lines) |
+| `bin/commands/doctor.sh` | Health check for achords + gentle-ai + opencode |
+| `scripts/install.sh` | One-liner installer (curl pipe) |
 | `package.json` | npm package config, version, scripts |
 | `web/index.html` | Landing page |
 | `web/docs/humans/` | Quartz documentation |
@@ -207,6 +209,39 @@ docs/skills/achords/SKILL.md
 ```
 Load it when implementing obase features, releasing, or updating docs.
 `<!-- achords:skill:docs/skills/achords/SKILL.md -->`
+
+## OpenCode + gentle-ai Integration
+
+Achords integrates with [gentle-ai](https://github.com/Gentleman-Programming/gentle-ai) for OpenCode.
+
+### What obase generates
+
+When you run `achords obase --repo <name>`, it creates:
+
+| File | Purpose |
+|------|---------|
+| `AGENTS.md` | Agent config with gentle-ai markers (persona + engram protocol) |
+| `opencode.json` | MCP servers (Engram, Context7) and permissions |
+| `.engram/` | Persistent memory directory |
+| `.achords/` | Submodule for org-wide rules |
+
+### Health check
+
+```bash
+# Verify installation
+achords doctor
+
+# Auto-fix issues
+achords doctor --fix
+```
+
+### One-liner install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/achords-org/achords/main/scripts/install.sh | bash
+```
+
+This installs gentle-ai, opencode, and achords together.
 
 ## Testing
 

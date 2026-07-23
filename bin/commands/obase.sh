@@ -77,6 +77,8 @@ show_help() {
   echo ""
   echo "  Set up your GitHub organization for multi-agent collaboration."
   echo ""
+  echo "  Integrates with gentle-ai for OpenCode (persona, memory, SDD)."
+  echo ""
   echo "  Usage:"
   echo "    achords obase [options]"
   echo ""
@@ -90,6 +92,16 @@ show_help() {
   echo "    --upgrade             Upgrade guides to current achords version (regenerates AGENTS.md body, preserves custom rules)"
   echo "    --push                Commit and push changes (works with all modes)"
   echo "    --help, -h            Show this help"
+  echo ""
+  echo "  Generated files (per repo):"
+  echo "    AGENTS.md       Agent config with gentle-ai markers"
+  echo "    opencode.json   MCP servers (Engram, Context7) and permissions"
+  echo "    .engram/        Persistent memory directory"
+  echo "    .achords/       Submodule for org-wide rules"
+  echo ""
+  echo "  Health check:"
+  echo "    achords doctor        Verify installation"
+  echo "    achords doctor --fix  Auto-fix issues"
   echo ""
   echo "  Examples:"
   echo "    achords obase"
@@ -1251,7 +1263,98 @@ EOF
 | Onboarding | \`.internal/onboarding/\` | Setup scripts and docs |
 | Repo Memory | \`.engram/\` | Isolated repo memory |
 | Repo Config | \`.engram/config.json\` | project_name setting |
+| OpenCode Config | \`opencode.json\` | MCP servers and permissions |
 <!-- achords:end -->
+
+<!-- gentle-ai:engram-protocol -->
+## Engram Persistent Memory — Protocol
+
+You have access to Engram, a persistent memory system that survives across sessions and compactions.
+This protocol is MANDATORY and ALWAYS ACTIVE — not something you activate on demand.
+
+### PROACTIVE SAVE TRIGGERS (mandatory — do NOT wait for user to ask)
+
+Call \`mem_save\` IMMEDIATELY and WITHOUT BEING ASKED after any of these:
+- Architecture or design decision made
+- Bug fix completed (include root cause)
+- Not-obvious discovery about the codebase
+- Configuration change or environment setup done
+- Pattern established (naming, structure, convention)
+- User preference or constraint learned
+
+Format for \`mem_save\`:
+- **title**: Verb + what — short, searchable
+- **type**: bugfix | decision | architecture | discovery | pattern | config | preference
+- **topic_key** (recommended for evolving topics): stable key like \`architecture/auth-model\`
+- **content**: What | Why | Where | Learned
+
+### WHEN TO SEARCH MEMORY
+
+On any variation of "remember", "recall", "what did we do", "how did we solve", or references to past work:
+1. Call \`mem_context\` — checks recent session history (fast, cheap)
+2. If not found, call \`mem_search\` with relevant keywords
+3. If found, use \`mem_get_observation\` for full untruncated content
+
+### SESSION CLOSE PROTOCOL (mandatory)
+
+Before ending a session or saying "done", call \`mem_session_summary\`:
+
+\`\`\`
+## Goal
+[What we were working on this session]
+## Instructions
+[User preferences or constraints discovered]
+## Discoveries
+- [Technical findings, gotchas]
+## Accomplished
+- [Completed items]
+## Next Steps
+- [What remains to be done]
+## Relevant Files
+- path/to/file — [what changed]
+\`\`\`
+
+### AFTER COMPACTION
+
+If you see a compaction message or "FIRST ACTION REQUIRED":
+1. IMMEDIATELY call \`mem_session_summary\` with the compacted summary content
+2. Call \`mem_context\` to recover additional context
+3. Only THEN continue working
+<!-- /gentle-ai:engram-protocol -->
+
+<!-- gentle-ai:persona -->
+## Rules
+
+- Never add "Co-Authored-By" or AI attribution to commits. Use conventional commits only.
+- Response-length contract: default to short answers. Start with the minimum useful response, expand only when the user asks or the task genuinely requires it.
+- Ask at most one question at a time. After asking it, STOP and wait.
+- Never agree with user claims without verification. First say you'll verify, then check code/docs.
+- If user is wrong, explain WHY with evidence. If you were wrong, acknowledge with proof.
+
+## Persona Scope (CRITICAL — read this first)
+
+The persona's Language, Tone, Speech Patterns, and Personality rules govern ONLY your reply text addressed to the user — what you SAY in chat.
+
+They do NOT govern artifacts you produce for the task:
+- Code, identifiers, function/variable names, comments
+- UI copy, labels, button text, error messages
+- Documentation, README files, commit messages
+- Any string literal inside source code
+
+For those artifacts: Default to English. Never inject persona stylistic emphasis into generated code.
+
+## Language
+
+- Match the user's current language in your REPLY ONLY.
+- When replying in Spanish, use warm natural Spanish without overloading with slang.
+- When replying in English, keep the full reply in natural English.
+
+## Contextual Skill Loading (MANDATORY)
+
+The \`<available_skills>\` block in your system prompt is authoritative — it lists every skill installed for this session.
+
+**Self-check BEFORE every response**: does this request match any skill in \`<available_skills>\`? If yes, read the matching SKILL.md BEFORE generating your reply. This is a blocking requirement.
+<!-- /gentle-ai:persona -->
 
 # ${repo_name}
 
@@ -1425,10 +1528,55 @@ EOF
     git add .gitignore 2>/dev/null || true
   fi
   
+  # Generate opencode.json if not exists (OpenCode + gentle-ai integration)
+  if [ ! -f "opencode.json" ]; then
+    info "Creating opencode.json for OpenCode integration..."
+    cat > opencode.json << 'OPEOF'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "engram": {
+      "command": ["engram", "mcp", "--tools=agent"],
+      "type": "local"
+    },
+    "context7": {
+      "enabled": true,
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp"
+    }
+  },
+  "permission": {
+    "bash": {
+      "*": "allow",
+      "git commit *": "ask",
+      "git push": "ask",
+      "git push *": "ask"
+    },
+    "read": {
+      "*": "allow",
+      "**/.env": "deny",
+      "**/.env.*": "deny",
+      "**/.ssh/**": "deny",
+      "**/secrets/**": "deny"
+    }
+  }
+}
+OPEOF
+    git add opencode.json 2>/dev/null || true
+    ok "opencode.json created"
+  fi
+  
+  # Sync with gentle-ai if installed (post-install hook)
+  if command -v gentle-ai &>/dev/null; then
+    info "Syncing with gentle-ai..."
+    gentle-ai sync 2>/dev/null || true
+    ok "gentle-ai synced"
+  fi
+  
   # Commit changes if any
   if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
     git add -A 2>/dev/null || true
-    git commit -m "feat: add agent memory configuration with .achords submodule" --quiet 2>/dev/null || true
+    git commit -m "feat: add agent memory config with opencode.json and gentle-ai sync" --quiet 2>/dev/null || true
   fi
   
   return 0
@@ -1482,11 +1630,13 @@ summary() {
   echo "    └── .skills/     → Shared skills library"
   echo ""
   echo "  Existing repos have been injected with:"
-  echo "    • AGENTS.md with achords resource table"
+  echo "    • AGENTS.md with achords resource table + gentle-ai markers"
+  echo "    • opencode.json with MCP servers (Engram, Context7)"
   echo "    • .engram/config.json with project context"
   echo "    • .achords submodule for org rules"
   echo "    • .skills submodule for shared skills"
   echo ""
+  echo "  Health check: achords doctor"
   if [ "$AUTO_PUSH" = true ]; then
     echo "  ✓ All changes pushed to remote"
   else

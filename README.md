@@ -4,6 +4,19 @@
 
 ## Quick start
 
+### One-liner install (recommended)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/achords-org/achords/main/scripts/install.sh | bash
+```
+
+This installs:
+- **gentle-ai** — AI agent ecosystem (persona, memory, SDD)
+- **opencode** — AI coding agent IDE
+- **achords** — Multi-agent orchestration
+
+### Manual install
+
 ```bash
 # Clone achords
 git clone https://github.com/achords-org/achords.git
@@ -33,7 +46,25 @@ cd achords
 
 # Run product
 ./bin/achords obase --org MyOrg
+
+# Health check
+./bin/achords doctor
 ```
+
+## Integration with gentle-ai + OpenCode
+
+Achords integrates with [gentle-ai](https://github.com/Gentleman-Programming/gentle-ai) for:
+
+- **Persona** — Senior Architect personality with warm Rioplatense Spanish
+- **Memory** — Persistent memory via Engram across sessions
+- **SDD** — Spec-Driven Development for substantial changes
+- **Skills** — Auto-loaded skills based on context
+
+When you run `achords obase`, it generates:
+- `AGENTS.md` with gentle-ai markers (persona + engram protocol)
+- `opencode.json` with MCP servers (Engram, Context7)
+- `.engram/` for persistent memory
+- `.achords/` submodule for org-wide rules
 
 ## How it works
 
@@ -42,6 +73,16 @@ Achords provides three levels of coordination:
 1. **Organization** — Set up your GitHub org for multi-agent work
 2. **Repository** — Coordinate agents within a repo using claims
 3. **Agent** — Register and declare work intent
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `achords obase --org <name>` | Initialize organization |
+| `achords obase --repo <name>` | Setup single repo |
+| `achords obase --upgrade` | Upgrade to latest version |
+| `achords doctor` | Health check |
+| `achords doctor --fix` | Auto-fix issues |
 
 ## Documentation
 
